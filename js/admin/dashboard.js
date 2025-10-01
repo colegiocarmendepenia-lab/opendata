@@ -1,4 +1,4 @@
-import auth, { supabase } from './auth.js';
+import auth, { supabase, mostrarError, mostrarExito } from './auth.js';
 
 // Variables globales
 let activityChart = null;
@@ -206,42 +206,4 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 
-// Función para mostrar mensajes de error
-function mostrarError(mensaje) {
-    const alertDiv = document.createElement('div');
-    alertDiv.className = 'alert alert-danger alert-dismissible fade show';
-    alertDiv.role = 'alert';
-    alertDiv.innerHTML = `
-        ${mensaje}
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-    `;
-
-    document.querySelector('.container-fluid').insertBefore(
-        alertDiv,
-        document.querySelector('.container-fluid').firstChild
-    );
-
-    setTimeout(() => {
-        alertDiv.remove();
-    }, 5000);
-}
-
-// Función para mostrar mensajes de éxito
-function mostrarExito(mensaje) {
-    const alertDiv = document.createElement('div');
-    alertDiv.className = 'alert alert-success alert-dismissible fade show';
-    alertDiv.role = 'alert';
-    alertDiv.innerHTML = `
-        ${mensaje}
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-    `;
-
-    document.querySelector('.container-fluid').insertBefore(
-        alertDiv,
-        document.querySelector('.container-fluid').firstChild
-    );
-
-    setTimeout(() => {
-        alertDiv.remove();
-    }, 3000);
-}
+// Importar funciones de utilidad desde auth.js

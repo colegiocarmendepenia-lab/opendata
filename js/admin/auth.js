@@ -75,4 +75,44 @@ const auth = {
     }
 };
 
+// Funciones de utilidad para mostrar mensajes
+export function mostrarError(mensaje) {
+    const alertDiv = document.createElement('div');
+    alertDiv.className = 'alert alert-danger alert-dismissible fade show';
+    alertDiv.role = 'alert';
+    alertDiv.innerHTML = `
+        ${mensaje}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+
+    document.querySelector('.container-fluid').insertBefore(
+        alertDiv,
+        document.querySelector('.container-fluid').firstChild
+    );
+
+    setTimeout(() => {
+        alertDiv.remove();
+    }, 5000);
+}
+
+// Función para mostrar mensajes de éxito
+export function mostrarExito(mensaje) {
+    const alertDiv = document.createElement('div');
+    alertDiv.className = 'alert alert-success alert-dismissible fade show';
+    alertDiv.role = 'alert';
+    alertDiv.innerHTML = `
+        ${mensaje}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+
+    document.querySelector('.container-fluid').insertBefore(
+        alertDiv,
+        document.querySelector('.container-fluid').firstChild
+    );
+
+    setTimeout(() => {
+        alertDiv.remove();
+    }, 3000);
+}
+
 export default auth;

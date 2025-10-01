@@ -1,5 +1,5 @@
 // Gestión de datasets
-import auth, { supabase } from './auth.js';
+import auth, { supabase, mostrarError, mostrarExito } from './auth.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
     // Verificar sesión y configurar listener
@@ -24,13 +24,19 @@ document.addEventListener('DOMContentLoaded', async () => {
 async function handleNuevoDataset() {
     try {
         // Validar que se hayan llenado todos los campos
-        const nombre = document.getElementById('nombreDataset').value;
-        const descripcion = document.getElementById('descripcion').value;
+        const nombre = document.getElementById('nombreDataset').value.trim();
+        const descripcion = document.getElementById('descripcion').value.trim();
         const categoria = document.getElementById('categoria').value;
         const archivo = document.getElementById('archivo').files[0];
 
-        if (!nombre || !descripcion || !categoria || !archivo) {
-            throw new Error('Por favor complete todos los campos');
+        const camposFaltantes = [];
+        if (!nombre) camposFaltantes.push('nombre');
+        if (!descripcion) camposFaltantes.push('descripción');
+        if (!categoria) camposFaltantes.push('categoría');
+        if (!archivo) camposFaltantes.push('archivo');
+
+        if (camposFaltantes.length > 0) {
+            throw new Error(`Por favor complete los siguientes campos: ${camposFaltantes.join(', ')}`);
         }
 
         // Validar tamaño del archivo (máximo 100MB)
