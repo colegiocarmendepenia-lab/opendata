@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Supabase Users - Colegio Carmen de Peña</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.0/dist/umd/supabase.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        .user-info {
+            margin: 10px 0;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .error {
+            color: red;
+            padding: 10px;
+            border: 1px solid red;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .success {
+            color: green;
+            padding: 10px;
+            border: 1px solid green;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>Test de Usuarios en Supabase</h1>
+    <div id="output"></div>
+
+    <script>
+        // Inicializar el cliente de Supabase
+        const SUPABASE_URL = 'https://yjrrtufenyfuhdycueyo.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlqcnJ0dWZlbnlmdWhkeWN1ZXlvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTkzMjA3NzEsImV4cCI6MjA3NDg5Njc3MX0.OiyO2QKj7nTYAS8-9QSMNqqjvV_1ZWX_KBJYZLmk5s4';
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        function displayMessage(message, type = 'info') {
+            const output = document.getElementById('output');
+            const div = document.createElement('div');
+            div.className = type;
+            div.textContent = message;
+            output.appendChild(div);
+        }
+
+        async function testSupabaseConnection() {
+            try {
+                // Verificar la conexión a Supabase
+                displayMessage('Verificando conexión a Supabase...');
+                
+                // Intentar obtener la sesión actual
+                const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+                
+                if (sessionError) {
+                    throw sessionError;
+                }
+
+                displayMessage('Conexión a Supabase establecida correctamente', 'success');
+
+                if (session) {
+                    displayMessage(`Sesión activa encontrada para: ${session.user.email}`, 'success');
+                } else {
+                    displayMessage('No hay sesión activa', 'info');
+                }
+
+                // Intentar obtener información de la configuración de autenticación
+                const { data: authSettings, error: authError } = await supabase.rpc('get_auth_settings');
+
+                if (authError) {
+                    displayMessage(`Error al obtener configuración de autenticación: ${authError.message}`, 'error');
+                } else {
+                    displayMessage('Configuración de autenticación:', 'success');
+                    console.log('Auth Settings:', authSettings);
+                }
+
+                // Intentar obtener usuarios (esto solo funcionará si tienes los permisos adecuados)
+                const { data: users, error: usersError } = await supabase
+                    .from('auth.users')
+                    .select('*');
+
+                if (usersError) {
+                    displayMessage(`Nota: No se pueden listar usuarios directamente (esto es normal por seguridad)`, 'info');
+                    console.log('Users Error:', usersError);
+                } else {
+                    displayMessage(`Usuarios encontrados: ${users.length}`, 'success');
+                    console.log('Users:', users);
+                }
+
+            } catch (error) {
+                displayMessage(`Error: ${error.message}`, 'error');
+                console.error('Error completo:', error);
+            }
+        }
+
+        // Ejecutar las pruebas cuando el documento esté listo
+        document.addEventListener('DOMContentLoaded', testSupabaseConnection);
+    </script>
+</body>
+</html>

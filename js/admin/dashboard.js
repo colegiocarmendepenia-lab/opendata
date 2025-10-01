@@ -1,0 +1,282 @@
+// Inicializar el cliente de Supabase
+const SUPABASE_URL = 'https://yjrrtufenyfuhdycueyo.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlqcnJ0dWZlbnlmdWhkeWN1ZXlvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTkzMjA3NzEsImV4cCI6MjA3NDg5Njc3MX0.OiyO2QKj7nTYAS8-9QSMNqqjvV_1ZWX_KBJYZLmk5s4';
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// Variables globales
+let currentUser = null;
+let activityChart = null;
+
+// Función para verificar la sesión del usuario
+async function checkSession() {
+    const { data: { session }, error } = await supabase.auth.getSession();
+    
+    if (error) {
+        console.error('Error al verificar la sesión:', error.message);
+        window.location.href = '../login.html';
+        return;
+    }
+
+    if (!session) {
+        window.location.href = '../login.html';
+        return;
+    }
+
+    currentUser = session.user;
+    
+    // Verificar si el usuario es administrador
+    const { data: userData, error: userError } = await supabase
+        .from('usuarios')
+        .select('rol')
+        .eq('id', currentUser.id)
+        .single();
+
+    if (userError || !userData || userData.rol !== 'admin') {
+        console.error('Usuario no autorizado');
+        await supabase.auth.signOut();
+        window.location.href = '../login.html';
+        return;
+    }
+
+    // Actualizar nombre de usuario en la interfaz
+    document.getElementById('userName').textContent = currentUser.email;
+}
+
+// Función para cargar estadísticas
+async function loadStats() {
+    try {
+        // Total de usuarios
+        const { count: userCount, error: userError } = await supabase
+            .from('usuarios')
+            .select('*', { count: 'exact', head: true });
+
+        if (userError) throw userError;
+        document.getElementById('totalUsuarios').textContent = userCount;
+
+        // Total de datasets
+        const { count: datasetCount, error: datasetError } = await supabase
+            .from('datasets')
+            .select('*', { count: 'exact', head: true });
+
+        if (datasetError) throw datasetError;
+        document.getElementById('totalDatasets').textContent = datasetCount;
+
+        // Total de descargas
+        const { count: downloadCount, error: downloadError } = await supabase
+            .from('descargas')
+            .select('*', { count: 'exact', head: true });
+
+        if (downloadError) throw downloadError;
+        document.getElementById('totalDescargas').textContent = downloadCount;
+
+        // Actividad en las últimas 24 horas
+        const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+        const { count: activityCount, error: activityError } = await supabase
+            .from('actividad')
+            .select('*', { count: 'exact', head: true })
+            .gte('created_at', oneDayAgo);
+
+        if (activityError) throw activityError;
+        document.getElementById('totalActividad').textContent = activityCount;
+
+    } catch (error) {
+        console.error('Error al cargar estadísticas:', error.message);
+        mostrarError('Error al cargar las estadísticas');
+    }
+}
+
+// Función para cargar actividad reciente
+async function loadRecentActivity() {
+    try {
+        const { data, error } = await supabase
+            .from('actividad_con_relaciones')
+            .select('*')
+            .order('created_at', { ascending: false })
+            .limit(10);
+
+        if (error) throw error;
+
+        const tbody = document.getElementById('actividadReciente');
+        tbody.innerHTML = '';
+
+        data.forEach(activity => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${activity.usuario_email || 'Usuario eliminado'}</td>
+                <td>${activity.tipo_accion}</td>
+                <td>${activity.dataset_nombre || 'Dataset eliminado'}</td>
+                <td>${new Date(activity.created_at).toLocaleString()}</td>
+            `;
+            tbody.appendChild(tr);
+        });
+
+    } catch (error) {
+        console.error('Error al cargar actividad reciente:', error.message);
+        mostrarError('Error al cargar la actividad reciente');
+    }
+}
+
+// Event Listeners
+document.addEventListener('DOMContentLoaded', async () => {
+    // Verificar sesión
+    await checkSession();
+
+    // Cargar datos iniciales
+    await Promise.all([
+        loadStats(),
+        loadRecentActivity()
+    ]);
+
+    // Manejar navegación
+    document.querySelectorAll('.nav-link[data-section]').forEach(link => {
+        link.addEventListener('click', (e) => {
+            e.preventDefault();
+            const section = e.target.getAttribute('data-section');
+            showSection(section);
+        });
+    });
+
+    // Manejar cierre de sesión
+    document.getElementById('btnLogout').addEventListener('click', async (e) => {
+        e.preventDefault();
+        try {
+            await supabase.auth.signOut();
+            window.location.href = '../login.html';
+        } catch (error) {
+            console.error('Error al cerrar sesión:', error.message);
+            mostrarError('Error al cerrar sesión');
+        }
+    });
+
+    // Actualizar datos cada 5 minutos
+    setInterval(async () => {
+        await Promise.all([
+            loadStats(),
+            loadRecentActivity()
+        ]);
+    }, 5 * 60 * 1000);
+});
+
+// Función para mostrar/ocultar secciones
+function showSection(sectionId) {
+    // Ocultar todas las secciones
+    document.querySelectorAll('.section').forEach(section => {
+        section.style.display = 'none';
+    });
+
+    // Mostrar la sección seleccionada
+    document.getElementById(`${sectionId}Section`).style.display = 'block';
+
+    // Actualizar navegación
+    document.querySelectorAll('.nav-link').forEach(link => {
+        link.classList.remove('active');
+    });
+    document.querySelector(`.nav-link[data-section="${sectionId}"]`).classList.add('active');
+
+    // Actualizar información de la sección
+    const sectionInfo = document.getElementById('sectionInfo');
+    const alertHeading = sectionInfo.querySelector('.alert-heading');
+    const alertContent = sectionInfo.querySelector('p');
+    const alertList = sectionInfo.querySelector('ul');
+
+    switch(sectionId) {
+        case 'dashboard':
+            alertHeading.innerHTML = '<i class="bi bi-speedometer2"></i> Dashboard';
+            alertContent.textContent = 'Bienvenido al Panel de Administración de OpenData. Aquí podrás:';
+            alertList.innerHTML = `
+                <li>Ver estadísticas generales del sistema</li>
+                <li>Monitorear la actividad reciente</li>
+                <li>Acceder rápidamente a las funciones principales</li>
+                <li>Gestionar usuarios, datos y configuraciones</li>
+            `;
+            break;
+        case 'usuarios':
+            alertHeading.innerHTML = '<i class="bi bi-people"></i> Gestión de Usuarios';
+            alertContent.textContent = 'En esta sección puedes administrar los usuarios del sistema:';
+            alertList.innerHTML = `
+                <li>Crear nuevos usuarios y asignar roles (Admin, Profesor, Estudiante)</li>
+                <li>Editar información y permisos de usuarios existentes</li>
+                <li>Desactivar o eliminar cuentas de usuario</li>
+                <li>Ver el historial de actividad de cada usuario</li>
+            `;
+            break;
+        case 'datos':
+            alertHeading.innerHTML = '<i class="bi bi-table"></i> Gestión de Datos';
+            alertContent.textContent = 'Administra los conjuntos de datos (datasets) del sistema:';
+            alertList.innerHTML = `
+                <li>Subir nuevos conjuntos de datos con metadatos</li>
+                <li>Organizar datos por categorías y etiquetas</li>
+                <li>Gestionar permisos de acceso a los datos</li>
+                <li>Monitorear descargas y uso de los datasets</li>
+            `;
+            break;
+        case 'reportes':
+            alertHeading.innerHTML = '<i class="bi bi-graph-up"></i> Reportes y Estadísticas';
+            alertContent.textContent = 'Analiza el uso y rendimiento del sistema:';
+            alertList.innerHTML = `
+                <li>Ver estadísticas detalladas de uso</li>
+                <li>Generar informes personalizados</li>
+                <li>Analizar tendencias de uso y descargas</li>
+                <li>Exportar datos para análisis externos</li>
+            `;
+            break;
+        case 'configuracion':
+            alertHeading.innerHTML = '<i class="bi bi-gear"></i> Configuración del Sistema';
+            alertContent.textContent = 'Personaliza y configura el sistema:';
+            alertList.innerHTML = `
+                <li>Ajustar preferencias generales del sistema</li>
+                <li>Configurar notificaciones y alertas</li>
+                <li>Gestionar copias de seguridad</li>
+                <li>Personalizar la apariencia del sistema</li>
+            `;
+            break;
+    }
+}
+
+// Inicializar tooltips de Bootstrap
+document.addEventListener('DOMContentLoaded', function() {
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+});
+
+// Función para mostrar mensajes de error
+function mostrarError(mensaje) {
+    const alertDiv = document.createElement('div');
+    alertDiv.className = 'alert alert-danger alert-dismissible fade show';
+    alertDiv.role = 'alert';
+    alertDiv.innerHTML = `
+        ${mensaje}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+
+    document.querySelector('.container-fluid').insertBefore(
+        alertDiv,
+        document.querySelector('.container-fluid').firstChild
+    );
+
+    setTimeout(() => {
+        alertDiv.remove();
+    }, 5000);
+}
+
+// Función para mostrar mensajes de éxito
+function mostrarExito(mensaje) {
+    const alertDiv = document.createElement('div');
+    alertDiv.className = 'alert alert-success alert-dismissible fade show';
+    alertDiv.role = 'alert';
+    alertDiv.innerHTML = `
+        ${mensaje}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+
+    document.querySelector('.container-fluid').insertBefore(
+        alertDiv,
+        document.querySelector('.container-fluid').firstChild
+    );
+
+    setTimeout(() => {
+        alertDiv.remove();
+    }, 3000);
+}

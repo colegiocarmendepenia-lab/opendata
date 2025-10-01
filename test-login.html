@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Login - Colegio Carmen de Peña</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.0/dist/umd/supabase.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .log-container {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+            font-family: monospace;
+            white-space: pre-wrap;
+        }
+        .error { color: red; }
+        .success { color: green; }
+        .info { color: blue; }
+    </style>
+</head>
+<body>
+    <h1>Prueba de Login</h1>
+    <div id="output"></div>
+
+    <script>
+        // Inicializar el cliente de Supabase
+        const SUPABASE_URL = 'https://yjrrtufenyfuhdycueyo.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlqcnJ0dWZlbnlmdWhkeWN1ZXlvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTkzMjA3NzEsImV4cCI6MjA3NDg5Njc3MX0.OiyO2QKj7nTYAS8-9QSMNqqjvV_1ZWX_KBJYZLmk5s4';
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        function log(message, type = 'info') {
+            console.log(message);
+            const output = document.getElementById('output');
+            const div = document.createElement('div');
+            div.className = `log-container ${type}`;
+            div.textContent = typeof message === 'object' ? JSON.stringify(message, null, 2) : message;
+            output.appendChild(div);
+        }
+
+        async function testLogin() {
+            try {
+                log('=== Iniciando prueba de login ===');
+                
+                // Verificar sesión actual
+                log('1. Verificando sesión actual...');
+                const { data: { session: currentSession }, error: sessionError } = await supabase.auth.getSession();
+                
+                if (sessionError) {
+                    throw sessionError;
+                }
+
+                if (currentSession) {
+                    log('Sesión activa encontrada:', 'info');
+                    log(currentSession);
+                    
+                    // Cerrar sesión si hay una activa
+                    log('Cerrando sesión actual...');
+                    await supabase.auth.signOut();
+                    log('Sesión cerrada exitosamente', 'success');
+                } else {
+                    log('No hay sesión activa');
+                }
+
+                // Intentar login
+                log('\n2. Intentando iniciar sesión...');
+                log('Credenciales a utilizar:');
+                log({
+                    email: 'colegiocarmendepenia@gmail.com',
+                    password: 'opeNDatA*2025**'
+                });
+
+                const { data, error } = await supabase.auth.signInWithPassword({
+                    email: 'colegiocarmendepenia@gmail.com',
+                    password: 'opeNDatA*2025**'
+                });
+
+                if (error) {
+                    log('Error durante el login:', 'error');
+                    log(error);
+                    throw error;
+                }
+
+                log('Login exitoso!', 'success');
+                log('Datos del usuario:');
+                log(data);
+
+                // Verificar la sesión después del login
+                log('\n3. Verificando sesión después del login...');
+                const { data: { session: newSession }, error: newSessionError } = await supabase.auth.getSession();
+                
+                if (newSessionError) {
+                    throw newSessionError;
+                }
+
+                if (newSession) {
+                    log('Nueva sesión creada exitosamente:', 'success');
+                    log(newSession);
+                } else {
+                    log('No se creó la sesión', 'error');
+                }
+
+            } catch (error) {
+                log('Error inesperado:', 'error');
+                log(error);
+            }
+        }
+
+        // Ejecutar la prueba cuando el documento esté listo
+        document.addEventListener('DOMContentLoaded', testLogin);
+    </script>
+</body>
+</html>

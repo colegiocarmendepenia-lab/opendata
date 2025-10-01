@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Token Login - Colegio Carmen de Peña</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.0/dist/umd/supabase.min.js"></script>
+</head>
+<body>
+    <h1>Prueba de Login con Token</h1>
+    <p>Abre la consola del navegador (F12) para ver los resultados de la prueba.</p>
+
+    <script>
+        // Inicializar el cliente de Supabase
+        const SUPABASE_URL = 'https://yjrrtufenyfuhdycueyo.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlqcnJ0dWZlbnlmdWhkeWN1ZXlvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTkzMjA3NzEsImV4cCI6MjA3NDg5Njc3MX0.OiyO2QKj7nTYAS8-9QSMNqqjvV_1ZWX_KBJYZLmk5s4';
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        async function testTokenLogin() {
+            try {
+                console.log('=== Probando acceso con token ===');
+                
+                // Primero intentamos obtener la sesión actual
+                const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+                
+                if (sessionError) {
+                    console.error('Error al obtener sesión:', sessionError);
+                    return;
+                }
+
+                console.log('Sesión actual:', session);
+
+                if (session) {
+                    console.log('Ya existe una sesión activa');
+                    console.log('Usuario:', session.user);
+                    return;
+                }
+
+                // Intentar crear un enlace mágico
+                const { data, error } = await supabase.auth.signInWithOtp({
+                    email: 'admin@cdpenia.com',
+                    options: {
+                        shouldCreateUser: false // No crear nuevo usuario si no existe
+                    }
+                });
+
+                if (error) {
+                    console.error('Error durante el envío del enlace:', error);
+                    console.error('Mensaje:', error.message);
+                    console.error('Código:', error.status);
+                    return;
+                }
+
+                console.log('Se ha enviado un enlace mágico al email.');
+                console.log('Por favor, revisa tu correo y haz clic en el enlace para iniciar sesión.');
+
+            } catch (error) {
+                console.error('Error inesperado:', error);
+            }
+        }
+
+        // Ejecutar la prueba cuando el documento esté listo
+        document.addEventListener('DOMContentLoaded', testTokenLogin);
+    </script>
+</body>
+</html>

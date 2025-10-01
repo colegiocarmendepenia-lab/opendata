@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel de Administración - OpenData</title>
+    <!-- Bootstrap 5.3.2 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <!-- Custom CSS -->
+    <link href="../css/admin-styles.css" rel="stylesheet">
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary sticky-top">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">
+                <i class="bi bi-database-fill"></i> OpenData Admin
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="#" data-section="dashboard" data-bs-toggle="tooltip" title="Panel principal con estadísticas y actividad reciente">
+                            <i class="bi bi-speedometer2"></i> Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" data-section="usuarios" data-bs-toggle="tooltip" title="Gestión de usuarios: crear, editar y asignar roles">
+                            <i class="bi bi-people"></i> Usuarios
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" data-section="datos" data-bs-toggle="tooltip" title="Gestión de datasets: subir, editar y organizar datos">
+                            <i class="bi bi-table"></i> Datos
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" data-section="reportes" data-bs-toggle="tooltip" title="Análisis y estadísticas detalladas del sistema">
+                            <i class="bi bi-graph-up"></i> Reportes
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" data-section="configuracion" data-bs-toggle="tooltip" title="Ajustes del sistema y preferencias">
+                            <i class="bi bi-gear"></i> Configuración
+                        </a>
+                    </li>
+                </ul>
+                <div class="navbar-nav">
+                    <div class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
+                            <i class="bi bi-person-circle"></i> 
+                            <span id="userName">Administrador</span>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="#" id="btnPerfil">
+                                <i class="bi bi-person"></i> Perfil
+                            </a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="#" id="btnLogout">
+                                <i class="bi bi-box-arrow-right"></i> Cerrar Sesión
+                            </a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container-fluid py-4">
+        <!-- Información de la sección -->
+        <div class="alert alert-info alert-dismissible fade show mb-4" role="alert" id="sectionInfo">
+            <h4 class="alert-heading"><i class="bi bi-info-circle"></i> Dashboard</h4>
+            <p class="mb-0">Bienvenido al Panel de Administración de OpenData. Aquí podrás:</p>
+            <ul class="mt-2 mb-0">
+                <li>Ver estadísticas generales del sistema</li>
+                <li>Monitorear la actividad reciente</li>
+                <li>Acceder rápidamente a las funciones principales</li>
+                <li>Gestionar usuarios, datos y configuraciones</li>
+            </ul>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+
+        <!-- Dashboard Section -->
+        <div class="section active" id="dashboardSection">
+            <div class="row">
+                <!-- Stats Cards -->
+                <div class="col-md-3 mb-4">
+                    <div class="card bg-primary text-white h-100">
+                        <div class="card-body">
+                            <h5 class="card-title">Total Usuarios</h5>
+                            <h2 class="display-4" id="totalUsuarios">0</h2>
+                            <p class="card-text">Usuarios registrados en el sistema</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3 mb-4">
+                    <div class="card bg-success text-white h-100">
+                        <div class="card-body">
+                            <h5 class="card-title">Conjuntos de Datos</h5>
+                            <h2 class="display-4" id="totalDatasets">0</h2>
+                            <p class="card-text">Datasets disponibles</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3 mb-4">
+                    <div class="card bg-info text-white h-100">
+                        <div class="card-body">
+                            <h5 class="card-title">Descargas</h5>
+                            <h2 class="display-4" id="totalDescargas">0</h2>
+                            <p class="card-text">Total de descargas</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3 mb-4">
+                    <div class="card bg-warning text-white h-100">
+                        <div class="card-body">
+                            <h5 class="card-title">Actividad</h5>
+                            <h2 class="display-4" id="totalActividad">0</h2>
+                            <p class="card-text">Acciones en las últimas 24h</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Activity -->
+                <div class="col-md-8 mb-4">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Actividad Reciente</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>Usuario</th>
+                                            <th>Acción</th>
+                                            <th>Dataset</th>
+                                            <th>Fecha</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="actividadReciente">
+                                        <!-- Se llenará dinámicamente -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="col-md-4 mb-4">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Acciones Rápidas</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="d-grid gap-2">
+                                <button class="btn btn-primary" type="button" data-bs-toggle="modal" data-bs-target="#nuevoUsuarioModal">
+                                    <i class="bi bi-person-plus"></i> Nuevo Usuario
+                                </button>
+                                <button class="btn btn-success" type="button" data-bs-toggle="modal" data-bs-target="#nuevoDatasetModal">
+                                    <i class="bi bi-file-earmark-plus"></i> Nuevo Dataset
+                                </button>
+                                <button class="btn btn-info text-white" type="button" id="btnGenerarReporte">
+                                    <i class="bi bi-file-earmark-pdf"></i> Generar Reporte
+                                </button>
+                                <button class="btn btn-warning text-white" type="button" data-bs-toggle="modal" data-bs-target="#configuracionModal">
+                                    <i class="bi bi-gear"></i> Configuración
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Usuarios Section -->
+        <div class="section" id="usuariosSection" style="display: none;">
+            <!-- Se implementará en admin-usuarios.js -->
+        </div>
+
+        <!-- Datos Section -->
+        <div class="section" id="datosSection" style="display: none;">
+            <!-- Se implementará en admin-datos.js -->
+        </div>
+
+        <!-- Reportes Section -->
+        <div class="section" id="reportesSection" style="display: none;">
+            <!-- Se implementará en admin-reportes.js -->
+        </div>
+
+        <!-- Configuración Section -->
+        <div class="section" id="configuracionSection" style="display: none;">
+            <!-- Se implementará en admin-config.js -->
+        </div>
+    </div>
+
+    <!-- Modales -->
+    <!-- Modal Nuevo Usuario -->
+    <div class="modal fade" id="nuevoUsuarioModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Nuevo Usuario</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="formNuevoUsuario">
+                        <div class="mb-3">
+                            <label for="nombre" class="form-label">Nombre</label>
+                            <input type="text" class="form-control" id="nombre" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="email" class="form-label">Email</label>
+                            <input type="email" class="form-control" id="email" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="rol" class="form-label">Rol</label>
+                            <select class="form-select" id="rol" required>
+                                <option value="">Seleccione un rol</option>
+                                <option value="admin">Administrador</option>
+                                <option value="profesor">Profesor</option>
+                                <option value="estudiante">Estudiante</option>
+                            </select>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" id="btnGuardarUsuario">Guardar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Nuevo Dataset -->
+    <div class="modal fade" id="nuevoDatasetModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Nuevo Dataset</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="formNuevoDataset">
+                        <div class="mb-3">
+                            <label for="nombreDataset" class="form-label">Nombre del Dataset</label>
+                            <input type="text" class="form-control" id="nombreDataset" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="descripcion" class="form-label">Descripción</label>
+                            <textarea class="form-control" id="descripcion" rows="3" required></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label for="categoria" class="form-label">Categoría</label>
+                            <select class="form-select" id="categoria" required>
+                                <option value="">Seleccione una categoría</option>
+                                <option value="educacion">Educación</option>
+                                <option value="ciencia">Ciencia</option>
+                                <option value="tecnologia">Tecnología</option>
+                                <option value="otros">Otros</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="archivo" class="form-label">Archivo</label>
+                            <input type="file" class="form-control" id="archivo" required>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" id="btnGuardarDataset">Guardar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Supabase JS -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Custom JS -->
+    <script src="../js/admin/dashboard.js"></script>
+    <script src="../js/admin/usuarios.js"></script>
+    <script src="../js/admin/datos.js"></script>
+    <script src="../js/admin/reportes.js"></script>
+    <script src="../js/admin/config.js"></script>
+</body>
+</html>
