@@ -1,0 +1,42 @@
+:root {
+    --primary-color: #1b3a6b;
+    --secondary-color: #f8f9fa;
+}
+
+.navbar-custom {
+    background-color: var(--primary-color);
+}
+
+.hero-section {
+    background: linear-gradient(rgba(27, 58, 107, 0.8), rgba(27, 58, 107, 0.9)), url('https://images.unsplash.com/photo-1523050854058-8df90110c9f1?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=MnwxfDB8MXxyYW5kb218MHx8c2Nob29sfHx8fHx8MTY5ODg0NjQ0MA&ixlib=rb-4.0.3&q=80&utm_campaign=api-credit&utm_medium=referral&utm_source=unsplash_source&w=1080');
+    background-size: cover;
+    background-position: center;
+    color: white;
+    padding: 6rem 0;
+}
+
+.card {
+    transition: transform 0.3s;
+    margin-bottom: 1rem;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+}
+
+.announcement-date {
+    color: #6c757d;
+    font-size: 0.9rem;
+}
+
+.category-badge {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+}
+
+.footer {
+    background-color: var(--primary-color);
+    color: white;
+    padding: 2rem 0;
+}

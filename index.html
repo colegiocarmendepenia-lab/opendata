@@ -6,50 +6,8 @@
     <title>Colegio Carmen de Peña - Comunicaciones y Avisos</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
-    <style>
-        :root {
-            --primary-color: #1b3a6b;
-            --secondary-color: #f8f9fa;
-        }
-        
-        .navbar-custom {
-            background-color: var(--primary-color);
-        }
-        
-        .hero-section {
-            background: linear-gradient(rgba(27, 58, 107, 0.8), rgba(27, 58, 107, 0.9)), url('https://images.unsplash.com/photo-1523050854058-8df90110c9f1?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=MnwxfDB8MXxyYW5kb218MHx8c2Nob29sfHx8fHx8MTY5ODg0NjQ0MA&ixlib=rb-4.0.3&q=80&utm_campaign=api-credit&utm_medium=referral&utm_source=unsplash_source&w=1080');
-            background-size: cover;
-            background-position: center;
-            color: white;
-            padding: 6rem 0;
-        }
-
-        .card {
-            transition: transform 0.3s;
-            margin-bottom: 1rem;
-        }
-
-        .card:hover {
-            transform: translateY(-5px);
-        }
-
-        .announcement-date {
-            color: #6c757d;
-            font-size: 0.9rem;
-        }
-
-        .category-badge {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-        }
-
-        .footer {
-            background-color: var(--primary-color);
-            color: white;
-            padding: 2rem 0;
-        }
-    </style>
+    <link rel="stylesheet" href="css/styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.0/dist/umd/supabase.min.js"></script>
 </head>
 <body>
     <!-- Navbar -->
@@ -109,45 +67,8 @@
     <section id="avisos" class="py-5">
         <div class="container">
             <h2 class="text-center mb-5">Últimos Avisos y Comunicaciones</h2>
-            <div class="row">
-                <!-- Aviso 1 -->
-                <div class="col-md-6 col-lg-4">
-                    <div class="card h-100">
-                        <div class="card-body">
-                            <span class="badge bg-primary category-badge">Académico</span>
-                            <h5 class="card-title">Fechas de Exámenes Finales</h5>
-                            <p class="announcement-date"><i class="bi bi-calendar3"></i> 1 de octubre, 2025</p>
-                            <p class="card-text">Se ha publicado el calendario de exámenes finales para el primer trimestre del año escolar 2025.</p>
-                            <a href="#" class="btn btn-outline-primary">Leer más</a>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Aviso 2 -->
-                <div class="col-md-6 col-lg-4">
-                    <div class="card h-100">
-                        <div class="card-body">
-                            <span class="badge bg-success category-badge">Eventos</span>
-                            <h5 class="card-title">Feria de Ciencias 2025</h5>
-                            <p class="announcement-date"><i class="bi bi-calendar3"></i> 30 de septiembre, 2025</p>
-                            <p class="card-text">Invitamos a toda la comunidad educativa a nuestra Feria de Ciencias anual. ¡No te pierdas los increíbles proyectos!</p>
-                            <a href="#" class="btn btn-outline-primary">Leer más</a>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Aviso 3 -->
-                <div class="col-md-6 col-lg-4">
-                    <div class="card h-100">
-                        <div class="card-body">
-                            <span class="badge bg-warning category-badge">Padres</span>
-                            <h5 class="card-title">Reunión de Apoderados</h5>
-                            <p class="announcement-date"><i class="bi bi-calendar3"></i> 29 de septiembre, 2025</p>
-                            <p class="card-text">Importante reunión de apoderados para discutir el progreso académico del primer trimestre.</p>
-                            <a href="#" class="btn btn-outline-primary">Leer más</a>
-                        </div>
-                    </div>
-                </div>
+            <div class="row" id="avisos-container">
+                <!-- Los avisos se cargarán dinámicamente aquí -->
             </div>
         </div>
     </section>
@@ -222,5 +143,10 @@
 
     <!-- Scripts de Bootstrap -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.0/dist/umd/supabase.min.js"></script>
+    <script src="js/app.js"></script>
+
+        // La lógica se ha movido a app.js
+    </script>
 </body>
 </html>
