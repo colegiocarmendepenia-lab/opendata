@@ -1,46 +1,7 @@
-// Inicializar el cliente de Supabase
-const SUPABASE_URL = 'https://yjrrtufenyfuhdycueyo.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlqcnJ0dWZlbnlmdWhkeWN1ZXlvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTkzMjA3NzEsImV4cCI6MjA3NDg5Njc3MX0.OiyO2QKj7nTYAS8-9QSMNqqjvV_1ZWX_KBJYZLmk5s4';
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+import auth, { supabase } from './auth.js';
 
 // Variables globales
-let currentUser = null;
 let activityChart = null;
-
-// Función para verificar la sesión del usuario
-async function checkSession() {
-    const { data: { session }, error } = await supabase.auth.getSession();
-    
-    if (error) {
-        console.error('Error al verificar la sesión:', error.message);
-        window.location.href = '../login.html';
-        return;
-    }
-
-    if (!session) {
-        window.location.href = '../login.html';
-        return;
-    }
-
-    currentUser = session.user;
-    
-    // Verificar si el usuario es administrador
-    const { data: userData, error: userError } = await supabase
-        .from('usuarios')
-        .select('rol')
-        .eq('id', currentUser.id)
-        .single();
-
-    if (userError || !userData || userData.rol !== 'admin') {
-        console.error('Usuario no autorizado');
-        await supabase.auth.signOut();
-        window.location.href = '../login.html';
-        return;
-    }
-
-    // Actualizar nombre de usuario en la interfaz
-    document.getElementById('userName').textContent = currentUser.email;
-}
 
 // Función para cargar estadísticas
 async function loadStats() {
@@ -118,8 +79,13 @@ async function loadRecentActivity() {
 
 // Event Listeners
 document.addEventListener('DOMContentLoaded', async () => {
-    // Verificar sesión
-    await checkSession();
+    // Verificar sesión y configurar listener
+    await auth.checkSession();
+    auth.setOnAuthStateChange(user => {
+        if (!user) {
+            window.location.href = '../login.html';
+        }
+    });
 
     // Cargar datos iniciales
     await Promise.all([
@@ -140,8 +106,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('btnLogout').addEventListener('click', async (e) => {
         e.preventDefault();
         try {
-            await supabase.auth.signOut();
-            window.location.href = '../login.html';
+            await auth.signOut();
         } catch (error) {
             console.error('Error al cerrar sesión:', error.message);
             mostrarError('Error al cerrar sesión');

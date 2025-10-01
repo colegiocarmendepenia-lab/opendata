@@ -1,5 +1,10 @@
 // Gestión de datasets
+import auth, { supabase } from './auth.js';
+
 document.addEventListener('DOMContentLoaded', async () => {
+    // Verificar sesión y configurar listener
+    await auth.checkSession();
+
     // Referencias a elementos del DOM
     const btnGuardarDataset = document.getElementById('btnGuardarDataset');
     const formNuevoDataset = document.getElementById('formNuevoDataset');
@@ -62,7 +67,7 @@ async function handleNuevoDataset() {
                     descripcion: descripcion,
                     categoria: categoria,
                     archivo_url: filePath,
-                    usuario_id: currentUser.id,
+                    usuario_id: auth.currentUser.id,
                     downloads: 0
                 }
             ]);
@@ -196,7 +201,7 @@ async function descargarDataset(datasetId) {
             .from('descargas')
             .insert([{
                 dataset_id: datasetId,
-                usuario_id: currentUser.id
+                usuario_id: auth.currentUser.id
             }]);
 
         // 4. Iniciar descarga

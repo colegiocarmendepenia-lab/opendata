@@ -99,20 +99,21 @@ document.addEventListener('DOMContentLoaded', function() {
 
             if (userError) throw userError;
 
-            // Redireccionar según el rol
+            // Redireccionar según el rol usando URLs absolutas desde la raíz
             setTimeout(() => {
+                const baseUrl = window.location.origin + window.location.pathname.replace('login.html', '');
                 switch(userData?.rol) {
                     case 'admin':
-                        window.location.href = 'admin/dashboard.html';
+                        window.location.href = baseUrl + 'admin/dashboard.html';
                         break;
                     case 'profesor':
-                        window.location.href = 'profesor/dashboard.html';
+                        window.location.href = baseUrl + 'profesor/dashboard.html';
                         break;
                     case 'estudiante':
-                        window.location.href = 'estudiante/dashboard.html';
+                        window.location.href = baseUrl + 'estudiante/dashboard.html';
                         break;
                     default:
-                        window.location.href = 'dashboard.html';
+                        window.location.href = baseUrl + 'dashboard.html';
                 }
             }, 1000);
 
