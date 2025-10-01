@@ -1,4 +1,6 @@
 // Gestión de usuarios
+import auth, { supabase, mostrarError, mostrarExito } from './auth.js';
+
 document.addEventListener('DOMContentLoaded', async () => {
     // Referencias a elementos del DOM
     const btnGuardarUsuario = document.getElementById('btnGuardarUsuario');
@@ -203,3 +205,7 @@ async function registrarActividad(tipo, usuarioId, detalles = {}) {
         console.error('Error al registrar actividad:', error.message);
     }
 }
+
+// Hacer las funciones disponibles globalmente para los botones en el HTML
+window.editarUsuario = editarUsuario;
+window.eliminarUsuario = eliminarUsuario;
