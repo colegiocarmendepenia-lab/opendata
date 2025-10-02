@@ -39,11 +39,13 @@ async function handleNuevoUsuario() {
             return;
         }
 
+        console.log('Verificando email:', email);
+
         // Verificar si el email ya existe en la tabla usuarios
         const { data: existingUsers, error: checkError } = await supabase
             .from('usuarios')
-            .select('id')
-            .eq('email', email);
+            .select('id, email')
+            .eq('email', email.toLowerCase());
 
         if (checkError) {
             console.error('Error al verificar email:', checkError);
@@ -51,14 +53,22 @@ async function handleNuevoUsuario() {
         }
 
         if (existingUsers && existingUsers.length > 0) {
+            console.log('Usuario existente encontrado:', existingUsers);
             mostrarError('El email ya está registrado. Por favor, utilice un email diferente.');
             return;
         }
 
+        console.log('Email disponible, continuando con la creación...');
+
+        // Normalizar el rol
         if (!rol) {
             mostrarError('Por favor, seleccione un rol');
             return;
         }
+
+        // Convertir 'Administrador' a 'admin'
+        const rolNormalizado = rol.toLowerCase() === 'administrador' ? 'admin' : rol.toLowerCase();
+        console.log('Rol normalizado:', rolNormalizado);
 
         // Verificar si el usuario actual es administrador
         const { data: sessionData } = await supabase.auth.getSession();
@@ -89,24 +99,36 @@ async function handleNuevoUsuario() {
         }
 
         // 2. Llamar a la Edge Function para crear el usuario
+        const requestData = {
+            action: 'create',
+            email: email.toLowerCase(),
+            password: password,
+            rol: rolNormalizado,
+            perfilId: perfilId
+        };
+        
+        console.log('Datos de la solicitud:', requestData);
+        
         const response = await fetch(`${CONFIG.baseUrl}/user-management`, {
             method: 'POST',
             headers: {
                 'Authorization': `Bearer ${currentSession.access_token}`,
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({
-                action: 'create',
-                email: email,
-                password: password,
-                rol: rol,
-                perfilId: perfilId
-            })
+            body: JSON.stringify(requestData)
         });
 
         const result = await response.json();
+        console.log('Respuesta del servidor:', result);
+        
         if (!response.ok) {
             const errorMessage = result.error || 'Error al crear usuario';
+            console.error('Error detallado:', {
+                status: response.status,
+                statusText: response.statusText,
+                error: result
+            });
+            
             if (errorMessage.includes('email ya está registrado')) {
                 mostrarError(errorMessage);
                 return;
