@@ -24,13 +24,11 @@ async function cargarTablas() {
                 <option value="">Seleccione una tabla</option>
                 ${tablas.map(tabla => {
                     // Verificar el tipo de dato recibido
-                    console.log('Procesando tabla:', tabla); // Para depuración
-                    
                     let nombreTabla = '';
                     if (typeof tabla === 'string') {
                         nombreTabla = tabla;
                     } else if (tabla && typeof tabla === 'object') {
-                        nombreTabla = tabla.table_name || tabla.nombre || Object.values(tabla)[0] || '';
+                        nombreTabla = tabla.tabla_nombre || '';
                     }
                     
                     if (!nombreTabla) {
