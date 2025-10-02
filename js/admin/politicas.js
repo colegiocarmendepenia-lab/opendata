@@ -12,6 +12,9 @@ async function cargarTablas() {
             .rpc('obtener_tablas_sistema');
 
         if (error) throw error;
+        
+        console.log('Datos recibidos de obtener_tablas_sistema:', data); // Para depuración
+        
         tablas = data || [];
 
         // Actualizar selector de tablas
@@ -20,9 +23,22 @@ async function cargarTablas() {
             selectTabla.innerHTML = `
                 <option value="">Seleccione una tabla</option>
                 ${tablas.map(tabla => {
-                    // Asegurarse de que tabla.table_name existe, si no, usar tabla directamente
-                    const nombreTabla = tabla.table_name || tabla;
-                    return `<option value="${nombreTabla}">${nombreTabla.charAt(0).toUpperCase() + nombreTabla.slice(1)}</option>`;
+                    // Verificar el tipo de dato recibido
+                    console.log('Procesando tabla:', tabla); // Para depuración
+                    
+                    let nombreTabla = '';
+                    if (typeof tabla === 'string') {
+                        nombreTabla = tabla;
+                    } else if (tabla && typeof tabla === 'object') {
+                        nombreTabla = tabla.table_name || tabla.nombre || Object.values(tabla)[0] || '';
+                    }
+                    
+                    if (!nombreTabla) {
+                        console.warn('Nombre de tabla no válido:', tabla);
+                        return '';
+                    }
+                    
+                    return `<option value="${nombreTabla}">${nombreTabla}</option>`;
                 }).join('')}
             `;
         }
