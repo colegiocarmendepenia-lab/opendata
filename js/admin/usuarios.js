@@ -2,7 +2,7 @@
 import auth, { supabase, mostrarError, mostrarExito } from './auth.js';
 
 // Versión del módulo
-const VERSION = '1.0.0';
+const VERSION = '1.0.1';
 
 // Configuración
 const CONFIG = {
