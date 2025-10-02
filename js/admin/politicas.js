@@ -1,19 +1,51 @@
 import { supabase, mostrarError, mostrarExito } from './auth.js';
 
-// Variable global para las políticas
+// Variables globales
 let politicas = [];
+let perfiles = [];
+
+// Función para cargar los perfiles
+async function cargarPerfiles() {
+    try {
+        const { data, error } = await supabase
+            .from('perfiles')
+            .select('*')
+            .order('nombre');
+
+        if (error) throw error;
+        perfiles = data || [];
+
+        // Actualizar selector de perfiles
+        const selectPerfil = document.getElementById('perfilId');
+        if (selectPerfil) {
+            selectPerfil.innerHTML = `
+                <option value="">Seleccione un perfil</option>
+                ${perfiles.map(p => `
+                    <option value="${p.id}">${p.nombre}</option>
+                `).join('')}
+            `;
+        }
+    } catch (error) {
+        console.error('Error al cargar perfiles:', error);
+        mostrarError('Error al cargar los perfiles');
+    }
+}
 
 // Función para cargar las políticas existentes
 async function cargarPoliticas() {
     try {
         const { data, error } = await supabase
             .from('politicas_seguridad')
-            .select('*')
+            .select(`
+                *,
+                perfil:perfiles(id, nombre)
+            `)
             .order('tabla');
 
         if (error) throw error;
 
         politicas = data || [];
+        await cargarPerfiles();
         actualizarTablaPoliticas();
     } catch (error) {
         console.error('Error al cargar políticas:', error);
@@ -29,24 +61,25 @@ function actualizarTablaPoliticas() {
     tabla.innerHTML = politicas.map(politica => `
         <tr>
             <td>${politica.tabla}</td>
+            <td>${politica.perfil ? politica.perfil.nombre : 'Sin perfil'}</td>
             <td>
-                <span class="badge bg-${getPoliticaBadgeColor(politica.consulta)}">
-                    ${getPoliticaDescription(politica.consulta)}
+                <span class="badge bg-${politica.consulta ? 'success' : 'danger'}">
+                    ${politica.consulta ? 'Sí' : 'No'}
                 </span>
             </td>
             <td>
-                <span class="badge bg-${getPoliticaBadgeColor(politica.insertar)}">
-                    ${getPoliticaDescription(politica.insertar)}
+                <span class="badge bg-${politica.insertar ? 'success' : 'danger'}">
+                    ${politica.insertar ? 'Sí' : 'No'}
                 </span>
             </td>
             <td>
-                <span class="badge bg-${getPoliticaBadgeColor(politica.actualizar)}">
-                    ${getPoliticaDescription(politica.actualizar)}
+                <span class="badge bg-${politica.actualizar ? 'success' : 'danger'}">
+                    ${politica.actualizar ? 'Sí' : 'No'}
                 </span>
             </td>
             <td>
-                <span class="badge bg-${getPoliticaBadgeColor(politica.eliminar)}">
-                    ${getPoliticaDescription(politica.eliminar)}
+                <span class="badge bg-${politica.eliminar ? 'success' : 'danger'}">
+                    ${politica.eliminar ? 'Sí' : 'No'}
                 </span>
             </td>
             <td>
@@ -64,6 +97,19 @@ function actualizarTablaPoliticas() {
 // Función para guardar una nueva política
 async function guardarPolitica(politica) {
     try {
+        // Verificar si ya existe una política para esta tabla y perfil
+        const { data: existente, error: errorBusqueda } = await supabase
+            .from('politicas_seguridad')
+            .select('*')
+            .eq('tabla', politica.tabla)
+            .eq('perfil_id', politica.perfil_id);
+
+        if (errorBusqueda) throw errorBusqueda;
+
+        if (existente && existente.length > 0) {
+            throw new Error('Ya existe una política para esta tabla y perfil');
+        }
+
         const { data, error } = await supabase
             .from('politicas_seguridad')
             .insert([politica])
@@ -76,7 +122,7 @@ async function guardarPolitica(politica) {
         return data[0];
     } catch (error) {
         console.error('Error al guardar política:', error);
-        mostrarError('Error al guardar la política');
+        mostrarError(error.message);
         throw error;
     }
 }
@@ -130,31 +176,13 @@ async function editarPolitica(id) {
 
         // Llenar el formulario con los datos de la política
         document.getElementById('nombreTabla').value = politica.tabla;
+        document.getElementById('perfilId').value = politica.perfil_id;
 
-        // Consulta
-        document.getElementById('consultaPublico').checked = politica.consulta.includes('public');
-        document.getElementById('consultaAutenticado').checked = politica.consulta.includes('authenticated');
-        document.getElementById('consultaAdmin').checked = politica.consulta.includes('admin');
-        document.getElementById('consultaProfesor').checked = politica.consulta.includes('profesor');
-        document.getElementById('consultaEstudiante').checked = politica.consulta.includes('estudiante');
-
-        // Inserción
-        document.getElementById('insertarAutenticado').checked = politica.insertar.includes('authenticated');
-        document.getElementById('insertarAdmin').checked = politica.insertar.includes('admin');
-        document.getElementById('insertarProfesor').checked = politica.insertar.includes('profesor');
-        document.getElementById('insertarEstudiante').checked = politica.insertar.includes('estudiante');
-
-        // Actualización
-        document.getElementById('actualizarAutenticado').checked = politica.actualizar.includes('authenticated');
-        document.getElementById('actualizarAdmin').checked = politica.actualizar.includes('admin');
-        document.getElementById('actualizarProfesor').checked = politica.actualizar.includes('profesor');
-        document.getElementById('actualizarEstudiante').checked = politica.actualizar.includes('estudiante');
-
-        // Eliminación
-        document.getElementById('eliminarAutenticado').checked = politica.eliminar.includes('authenticated');
-        document.getElementById('eliminarAdmin').checked = politica.eliminar.includes('admin');
-        document.getElementById('eliminarProfesor').checked = politica.eliminar.includes('profesor');
-        document.getElementById('eliminarEstudiante').checked = politica.eliminar.includes('estudiante');
+        // Permisos
+        document.getElementById('permiso_consulta').checked = politica.consulta;
+        document.getElementById('permiso_insertar').checked = politica.insertar;
+        document.getElementById('permiso_actualizar').checked = politica.actualizar;
+        document.getElementById('permiso_eliminar').checked = politica.eliminar;
 
         // Mostrar modal
         const modal = new bootstrap.Modal(document.getElementById('nuevaPoliticaModal'));
@@ -178,10 +206,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 const politicaId = form.dataset.politicaId;
                 const politica = {
                     tabla: document.getElementById('nombreTabla').value,
-                    consulta: getPoliticaPermisos('consulta'),
-                    insertar: getPoliticaPermisos('insertar'),
-                    actualizar: getPoliticaPermisos('actualizar'),
-                    eliminar: getPoliticaPermisos('eliminar')
+                    perfil_id: document.getElementById('perfilId').value,
+                    consulta: document.getElementById('permiso_consulta').checked,
+                    insertar: document.getElementById('permiso_insertar').checked,
+                    actualizar: document.getElementById('permiso_actualizar').checked,
+                    eliminar: document.getElementById('permiso_eliminar').checked
                 };
 
                 if (politicaId) {

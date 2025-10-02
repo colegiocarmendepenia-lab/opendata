@@ -251,6 +251,7 @@
                                     <thead>
                                         <tr>
                                             <th>Tabla</th>
+                                            <th>Perfil</th>
                                             <th>Consultar</th>
                                             <th>Agregar</th>
                                             <th>Editar</th>
@@ -403,46 +404,57 @@
                 </div>
                 <div class="modal-body">
                     <form id="formPolitica">
-                        <div class="mb-3">
-                            <label for="nombreTabla" class="form-label">Tabla</label>
-                            <select class="form-select" id="nombreTabla" required>
-                                <option value="">Seleccione una tabla</option>
-                                <option value="usuarios">Usuarios</option>
-                                <option value="perfiles">Perfiles</option>
-                                <option value="datasets">Datasets</option>
-                                <option value="descargas">Descargas</option>
-                                <option value="actividad">Actividad</option>
-                            </select>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="nombreTabla" class="form-label">Tabla</label>
+                                <select class="form-select" id="nombreTabla" required>
+                                    <option value="">Seleccione una tabla</option>
+                                    <option value="usuarios">Usuarios</option>
+                                    <option value="perfiles">Perfiles</option>
+                                    <option value="datasets">Datasets</option>
+                                    <option value="descargas">Descargas</option>
+                                    <option value="actividad">Actividad</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="perfilId" class="form-label">Perfil</label>
+                                <select class="form-select" id="perfilId" required>
+                                    <option value="">Seleccione un perfil</option>
+                                    <!-- Se llenará dinámicamente -->
+                                </select>
+                            </div>
                         </div>
 
-                        <!-- Políticas de Consulta -->
-                        <div class="mb-3">
-                            <label class="form-label">Política de Consulta (SELECT)</label>
-                            <div class="card">
-                                <div class="card-body">
-                                    <div class="mb-2">
-                                        <div class="form-check">
-                                            <input class="form-check-input" type="checkbox" id="consultaPublico">
-                                            <label class="form-check-label" for="consultaPublico">Público</label>
-                                        </div>
-                                        <div class="form-check">
-                                            <input class="form-check-input" type="checkbox" id="consultaAutenticado">
-                                            <label class="form-check-label" for="consultaAutenticado">Usuario Autenticado</label>
-                                        </div>
-                                    </div>
-                                    <div class="mb-2">
-                                        <label class="form-label">Roles permitidos:</label>
-                                        <div class="form-check">
-                                            <input class="form-check-input" type="checkbox" id="consultaAdmin">
-                                            <label class="form-check-label" for="consultaAdmin">Administrador</label>
-                                        </div>
-                                        <div class="form-check">
-                                            <input class="form-check-input" type="checkbox" id="consultaProfesor">
-                                            <label class="form-check-label" for="consultaProfesor">Profesor</label>
-                                        </div>
-                                        <div class="form-check">
-                                            <input class="form-check-input" type="checkbox" id="consultaEstudiante">
-                                            <label class="form-check-label" for="consultaEstudiante">Estudiante</label>
+                        <div class="row mt-4">
+                            <div class="col-12">
+                                <h5>Permisos</h5>
+                                <div class="card">
+                                    <div class="card-body">
+                                        <div class="row">
+                                            <div class="col-md-3">
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="checkbox" id="permiso_consulta">
+                                                    <label class="form-check-label" for="permiso_consulta">Consultar</label>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="checkbox" id="permiso_insertar">
+                                                    <label class="form-check-label" for="permiso_insertar">Agregar</label>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="checkbox" id="permiso_actualizar">
+                                                    <label class="form-check-label" for="permiso_actualizar">Editar</label>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="checkbox" id="permiso_eliminar">
+                                                    <label class="form-check-label" for="permiso_eliminar">Eliminar</label>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
