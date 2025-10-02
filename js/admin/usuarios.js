@@ -41,7 +41,8 @@ async function handleNuevoUsuario() {
             .from('usuarios')
             .select('id')
             .eq('email', email)
-            .single();
+            .single()
+            .throwOnError();
 
         if (checkError && checkError.code !== 'PGRST116') { // PGRST116 es el código cuando no se encuentra registro
             throw checkError;
@@ -118,14 +119,55 @@ async function handleNuevoUsuario() {
         // 3. Registrar actividad
         await registrarActividad('crear_usuario', userId);
 
-        // 4. Mostrar mensaje de éxito
-        mostrarExito('Usuario creado exitosamente');
-        
-        // 5. Cerrar modal y actualizar lista
-        const modal = bootstrap.Modal.getInstance(document.getElementById('nuevoUsuarioModal'));
-        if (modal) {
-            modal.hide();
+        // 4. Mostrar modal con la contraseña temporal
+        const passwordModalHtml = `
+            <div class="modal fade" id="passwordModal" tabindex="-1" data-bs-backdrop="static">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Usuario Creado Exitosamente</h5>
+                        </div>
+                        <div class="modal-body">
+                            <div class="alert alert-success">
+                                <p>El usuario ha sido creado con éxito.</p>
+                                <p class="mb-0"><strong>Email:</strong> ${email}</p>
+                                <p class="mb-0"><strong>Contraseña temporal:</strong> ${password}</p>
+                            </div>
+                            <div class="alert alert-warning">
+                                <p class="mb-0">Por favor, guarde o comparta esta contraseña de forma segura con el usuario.
+                                El usuario deberá cambiarla en su primer inicio de sesión.</p>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" onclick="copyToClipboard('${password}')">Copiar Contraseña</button>
+                            <button type="button" class="btn btn-primary" onclick="closePasswordModal()">Entendido</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        // Eliminar modal anterior si existe
+        const oldPasswordModal = document.getElementById('passwordModal');
+        if (oldPasswordModal) {
+            oldPasswordModal.remove();
         }
+
+        // Agregar nuevo modal al DOM
+        const modalWrapper = document.createElement('div');
+        modalWrapper.innerHTML = passwordModalHtml;
+        document.body.appendChild(modalWrapper);
+
+        // Cerrar modal de creación
+        const createModal = bootstrap.Modal.getInstance(document.getElementById('nuevoUsuarioModal'));
+        if (createModal) {
+            createModal.hide();
+        }
+
+        // Mostrar modal de contraseña
+        const passwordModal = new bootstrap.Modal(document.getElementById('passwordModal'));
+        passwordModal.show();
+
         await cargarListaUsuarios();
 
     } catch (error) {
@@ -407,7 +449,38 @@ async function registrarActividad(tipo, usuarioId, detalles = {}) {
     }
 }
 
+// Función para copiar al portapapeles
+async function copyToClipboard(text) {
+    try {
+        await navigator.clipboard.writeText(text);
+        const copyBtn = document.querySelector('#passwordModal button.btn-secondary');
+        if (copyBtn) {
+            const originalText = copyBtn.textContent;
+            copyBtn.textContent = '¡Copiado!';
+            setTimeout(() => {
+                copyBtn.textContent = originalText;
+            }, 2000);
+        }
+    } catch (err) {
+        console.error('Error al copiar:', err);
+    }
+}
+
+// Función para cerrar el modal de contraseña
+function closePasswordModal() {
+    const modal = bootstrap.Modal.getInstance(document.getElementById('passwordModal'));
+    if (modal) {
+        modal.hide();
+        // Limpiar modal después de cerrar
+        document.getElementById('passwordModal').addEventListener('hidden.bs.modal', function () {
+            this.remove();
+        });
+    }
+}
+
 // Exportar funciones para uso global
 window.editarUsuario = editarUsuario;
 window.eliminarUsuario = eliminarUsuario;
 window.guardarCambiosUsuario = guardarCambiosUsuario;
+window.copyToClipboard = copyToClipboard;
+window.closePasswordModal = closePasswordModal;
