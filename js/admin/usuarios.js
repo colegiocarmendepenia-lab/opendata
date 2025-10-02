@@ -92,18 +92,8 @@ async function handleNuevoUsuario() {
 
         const userId = result.userId;
 
-        // 3. Crear registro en tabla usuarios
-        const { error: insertError } = await supabase
-            .from('usuarios')
-            .insert([{
-                id: userId,
-                email: email,
-                rol: rol,
-                perfil_id: perfilId || null
-            }]);
-
-        if (insertError) throw insertError;
-
+        // El registro en la tabla usuarios ya se creó en la Edge Function
+        
         // 3. Registrar actividad
         await registrarActividad('crear_usuario', userId);
 

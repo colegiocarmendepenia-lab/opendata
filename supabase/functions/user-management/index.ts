@@ -89,7 +89,7 @@ serve(async (req: Request) => {
           throw new Error('Missing required fields for user creation');
         }
         
-        // Crear usuario en Auth
+        // 1. Crear usuario en Auth
         const { data: authData, error: createError } = await supabaseClient.auth.admin.createUser({
           email: data.email,
           password: data.password,
@@ -99,17 +99,27 @@ serve(async (req: Request) => {
 
         if (createError) throw createError;
 
-        // Crear registro en tabla usuarios
-        const { error: insertError } = await supabaseClient
-          .from('usuarios')
-          .insert([{
-            id: authData.user.id,
-            email: data.email,
-            rol: data.rol,
-            perfil_id: data.perfilId || null
-          }]);
+        try {
+          // 2. Crear registro en tabla usuarios
+          const { error: insertError } = await supabaseClient
+            .from('usuarios')
+            .insert([{
+              id: authData.user.id,
+              email: data.email,
+              rol: data.rol,
+              perfil_id: data.perfilId || null
+            }]);
 
-        if (insertError) throw insertError;
+          if (insertError) {
+            // Si falla la inserción en la tabla, eliminamos el usuario de Auth
+            await supabaseClient.auth.admin.deleteUser(authData.user.id);
+            throw insertError;
+          }
+        } catch (error) {
+          // Si ocurre cualquier error, aseguramos eliminar el usuario de Auth
+          await supabaseClient.auth.admin.deleteUser(authData.user.id);
+          throw error;
+        }
 
         result = { message: 'Usuario creado exitosamente', userId: authData.user.id };
         break;
