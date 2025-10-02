@@ -26,10 +26,14 @@ async function handleNuevoUsuario() {
 
     try {
         // 1. Crear usuario en Auth
-        const { data: authData, error: authError } = await supabase.auth.admin.createUser({
+        const { data: authData, error: authError } = await supabase.auth.signUp({
             email: email,
             password: password,
-            email_confirm: true
+            options: {
+                data: {
+                    rol: rol
+                }
+            }
         });
 
         if (authError) throw authError;
