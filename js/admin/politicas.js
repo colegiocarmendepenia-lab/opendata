@@ -203,7 +203,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Cargar políticas cuando se muestra la sección
-    document.querySelector('.nav-link[data-section="configuracion"]').addEventListener('click', cargarPoliticas);
+    document.querySelector('.nav-link[data-section="politicas"]').addEventListener('click', cargarPoliticas);
 });
 
 // Funciones auxiliares

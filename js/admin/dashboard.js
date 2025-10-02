@@ -221,6 +221,16 @@ function showSection(sectionId) {
                     <li>Gestionar permisos por perfil</li>
                 `;
                 break;
+            case 'politicas':
+                alertHeading.innerHTML = '<i class="bi bi-shield-lock"></i> Políticas de Seguridad';
+                alertContent.textContent = 'Gestiona las políticas de seguridad del sistema:';
+                alertList.innerHTML = `
+                    <li>Configurar permisos de acceso por tabla</li>
+                    <li>Definir políticas para operaciones CRUD</li>
+                    <li>Asignar permisos por rol de usuario</li>
+                    <li>Gestionar restricciones de seguridad</li>
+                `;
+                break;
         }
     } catch (error) {
         console.error('Error al mostrar sección:', error.message);
