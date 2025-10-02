@@ -2,7 +2,7 @@
 import auth, { supabase, mostrarError, mostrarExito } from './auth.js';
 
 // Versión del módulo
-const VERSION = '1.0.3';
+const VERSION = '1.0.4';
 
 // Configuración
 const CONFIG = {
@@ -42,14 +42,6 @@ async function handleNuevoUsuario() {
         console.log('Verificando email:', email);
 
         try {
-            // Obtener la sesión actual primero
-            const { data: { session: currentSession }, error: sessionError } = await supabase.auth.getSession();
-            if (sessionError) throw sessionError;
-
-            if (!currentSession) {
-                throw new Error('No hay sesión activa');
-            }
-
             // 1. Verificar si el email existe en la tabla usuarios
             const { data: existingUsers, error: checkError } = await supabase
                 .from('usuarios')
@@ -63,22 +55,22 @@ async function handleNuevoUsuario() {
 
             if (existingUsers && existingUsers.length > 0) {
                 console.log('Usuario existente encontrado en tabla usuarios:', existingUsers);
-                mostrarError('El email ya está registrado. Por favor, utilice un email diferente.');
-                return;
+                // Intentar limpiar datos inconsistentes
+                try {
+                    const { error: deleteError } = await supabase
+                        .from('usuarios')
+                        .delete()
+                        .eq('email', email.toLowerCase());
+                    
+                    if (deleteError) {
+                        console.error('Error al limpiar registro inconsistente:', deleteError);
+                    } else {
+                        console.log('Registro inconsistente limpiado con éxito');
+                    }
+                } catch (cleanupError) {
+                    console.error('Error durante la limpieza:', cleanupError);
+                }
             }
-
-            // 2. Verificar en Supabase Auth a través de la Edge Function
-            const response = await fetch(`${CONFIG.baseUrl}/user-management`, {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${currentSession.access_token}`,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    action: 'check_email',
-                    email: email.toLowerCase()
-                })
-            });
 
             const result = await response.json();
             console.log('Resultado de verificación en Auth:', result);
