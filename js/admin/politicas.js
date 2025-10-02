@@ -78,8 +78,23 @@ async function cargarPerfiles() {
 // Función para cargar las políticas existentes
 async function cargarPoliticas() {
     try {
-        await cargarTablas(); // Cargar las tablas primero
-        const { data, error } = await supabase
+        // Mostrar indicador de carga
+        const tabla = document.getElementById('tablaPoliticas');
+        if (tabla) {
+            tabla.innerHTML = `
+                <tr>
+                    <td colspan="7" class="text-center">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Cargando...</span>
+                        </div>
+                        <div class="mt-2">Cargando políticas...</div>
+                    </td>
+                </tr>
+            `;
+        }
+
+        // Cargar las políticas primero
+        const { data: politicasData, error: politicasError } = await supabase
             .from('politicas_seguridad')
             .select(`
                 *,
@@ -87,14 +102,36 @@ async function cargarPoliticas() {
             `)
             .order('tabla');
 
-        if (error) throw error;
+        if (politicasError) throw politicasError;
+        politicas = politicasData || [];
+        
+        // Actualizar la tabla inmediatamente con los datos que tenemos
+        actualizarTablaPoliticas();
 
-        politicas = data || [];
-        await cargarPerfiles();
+        // Cargar tablas y perfiles en paralelo
+        await Promise.all([
+            cargarTablas(),
+            cargarPerfiles()
+        ]);
+
+        // Actualizar la tabla nuevamente por si hay cambios en los selectores
         actualizarTablaPoliticas();
     } catch (error) {
         console.error('Error al cargar políticas:', error);
         mostrarError('Error al cargar las políticas de seguridad');
+        
+        // Mostrar mensaje de error en la tabla
+        const tabla = document.getElementById('tablaPoliticas');
+        if (tabla) {
+            tabla.innerHTML = `
+                <tr>
+                    <td colspan="7" class="text-center text-danger">
+                        <i class="bi bi-exclamation-triangle me-2"></i>
+                        Error al cargar las políticas
+                    </td>
+                </tr>
+            `;
+        }
     }
 }
 
