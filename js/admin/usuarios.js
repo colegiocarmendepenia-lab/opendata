@@ -3,7 +3,7 @@ import auth, { supabase, mostrarError, mostrarExito } from './auth.js';
 
 // Configuración
 const CONFIG = {
-    baseUrl: 'https://bvyhhftqpjxpfqbmbavt.supabase.co',  // URL de tu proyecto Supabase
+    baseUrl: 'https://bvyhhftqpjxpfqbmbavt.functions.supabase.co',  // URL de Supabase Edge Functions
     defaultRedirect: '/login.html'
 };
 
@@ -70,7 +70,7 @@ async function handleNuevoUsuario() {
         }
 
         // 2. Llamar a la Edge Function para crear el usuario
-        const response = await fetch(`${CONFIG.baseUrl}/functions/user-management`, {
+        const response = await fetch(`${CONFIG.baseUrl}/user-management`, {
             method: 'POST',
             headers: {
                 'Authorization': `Bearer ${currentSession.access_token}`,
@@ -327,7 +327,7 @@ async function eliminarUsuario(userId) {
         }
 
         // 2. Llamar a la Edge Function para eliminar el usuario
-        const response = await fetch(`${CONFIG.baseUrl}/functions/user-management`, {
+        const response = await fetch(`${CONFIG.baseUrl}/user-management`, {
             method: 'POST',
             headers: {
                 'Authorization': `Bearer ${currentSession.access_token}`,
