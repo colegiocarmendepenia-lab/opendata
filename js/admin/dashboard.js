@@ -211,6 +211,16 @@ function showSection(sectionId) {
                     <li>Personalizar la apariencia del sistema</li>
                 `;
                 break;
+            case 'perfiles':
+                alertHeading.innerHTML = '<i class="bi bi-person-badge"></i> Gestión de Perfiles';
+                alertContent.textContent = 'Administra los perfiles de usuario del sistema:';
+                alertList.innerHTML = `
+                    <li>Crear nuevos perfiles con diferentes niveles de acceso</li>
+                    <li>Editar perfiles existentes</li>
+                    <li>Asignar perfiles a usuarios</li>
+                    <li>Gestionar permisos por perfil</li>
+                `;
+                break;
         }
     } catch (error) {
         console.error('Error al mostrar sección:', error.message);
