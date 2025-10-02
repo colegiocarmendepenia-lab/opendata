@@ -78,22 +78,6 @@ async function cargarPerfiles() {
 // Función para cargar las políticas existentes
 async function cargarPoliticas() {
     try {
-        // Mostrar indicador de carga
-        const tabla = document.getElementById('tablaPoliticas');
-        if (tabla) {
-            tabla.innerHTML = `
-                <tr>
-                    <td colspan="7" class="text-center">
-                        <div class="spinner-border text-primary" role="status">
-                            <span class="visually-hidden">Cargando...</span>
-                        </div>
-                        <div class="mt-2">Cargando políticas...</div>
-                    </td>
-                </tr>
-            `;
-        }
-
-        // Cargar las políticas primero
         const { data: politicasData, error: politicasError } = await supabase
             .from('politicas_seguridad')
             .select(`
@@ -104,23 +88,13 @@ async function cargarPoliticas() {
 
         if (politicasError) throw politicasError;
         politicas = politicasData || [];
-        
-        // Actualizar la tabla inmediatamente con los datos que tenemos
         actualizarTablaPoliticas();
 
-        // Cargar tablas y perfiles en paralelo
-        await Promise.all([
-            cargarTablas(),
-            cargarPerfiles()
-        ]);
-
-        // Actualizar la tabla nuevamente por si hay cambios en los selectores
-        actualizarTablaPoliticas();
+        await Promise.all([cargarTablas(), cargarPerfiles()]);
     } catch (error) {
         console.error('Error al cargar políticas:', error);
         mostrarError('Error al cargar las políticas de seguridad');
         
-        // Mostrar mensaje de error en la tabla
         const tabla = document.getElementById('tablaPoliticas');
         if (tabla) {
             tabla.innerHTML = `
@@ -280,6 +254,21 @@ async function editarPolitica(id) {
 
 // Event Listeners
 document.addEventListener('DOMContentLoaded', () => {
+    // Inicializar la tabla de políticas vacía
+    const tabla = document.getElementById('tablaPoliticas');
+    if (tabla) {
+        tabla.innerHTML = `
+            <tr>
+                <td colspan="7" class="text-center">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Cargando...</span>
+                    </div>
+                    <div class="mt-2">Cargando políticas...</div>
+                </td>
+            </tr>
+        `;
+    }
+
     const btnGuardarPolitica = document.getElementById('btnGuardarPolitica');
     if (btnGuardarPolitica) {
         btnGuardarPolitica.addEventListener('click', async () => {
@@ -314,7 +303,36 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Cargar políticas cuando se muestra la sección
-    document.querySelector('.nav-link[data-section="politicas"]').addEventListener('click', cargarPoliticas);
+    const politicasLink = document.querySelector('.nav-link[data-section="politicas"]');
+    if (politicasLink) {
+        politicasLink.addEventListener('click', async () => {
+            // Primero cargar las políticas
+            const { data: politicasData, error: politicasError } = await supabase
+                .from('politicas_seguridad')
+                .select(`
+                    *,
+                    perfil:perfiles(id, nombre)
+                `)
+                .order('tabla');
+
+            if (politicasError) {
+                console.error('Error al cargar políticas:', politicasError);
+                mostrarError('Error al cargar las políticas de seguridad');
+                return;
+            }
+
+            politicas = politicasData || [];
+            actualizarTablaPoliticas();
+
+            // Luego cargar tablas y perfiles en paralelo
+            Promise.all([
+                cargarTablas(),
+                cargarPerfiles()
+            ]).catch(error => {
+                console.error('Error al cargar datos adicionales:', error);
+            });
+        });
+    }
 });
 
 // Funciones auxiliares
