@@ -3,6 +3,32 @@ import { supabase, mostrarError, mostrarExito } from './auth.js';
 // Variables globales
 let politicas = [];
 let perfiles = [];
+let tablas = [];
+
+// Función para cargar las tablas de la base de datos
+async function cargarTablas() {
+    try {
+        const { data, error } = await supabase
+            .rpc('obtener_tablas_sistema');
+
+        if (error) throw error;
+        tablas = data || [];
+
+        // Actualizar selector de tablas
+        const selectTabla = document.getElementById('nombreTabla');
+        if (selectTabla) {
+            selectTabla.innerHTML = `
+                <option value="">Seleccione una tabla</option>
+                ${tablas.map(tabla => `
+                    <option value="${tabla}">${tabla.charAt(0).toUpperCase() + tabla.slice(1)}</option>
+                `).join('')}
+            `;
+        }
+    } catch (error) {
+        console.error('Error al cargar tablas:', error);
+        mostrarError('Error al cargar las tablas del sistema');
+    }
+}
 
 // Función para cargar los perfiles
 async function cargarPerfiles() {
@@ -34,6 +60,7 @@ async function cargarPerfiles() {
 // Función para cargar las políticas existentes
 async function cargarPoliticas() {
     try {
+        await cargarTablas(); // Cargar las tablas primero
         const { data, error } = await supabase
             .from('politicas_seguridad')
             .select(`
