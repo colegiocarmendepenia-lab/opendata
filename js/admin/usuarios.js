@@ -2,7 +2,7 @@
 import auth, { supabase, mostrarError, mostrarExito } from './auth.js';
 
 // Versión del módulo
-const VERSION = '1.0.4';
+const VERSION = '1.0.5';
 
 // Configuración
 const CONFIG = {
@@ -64,13 +64,19 @@ async function handleNuevoUsuario() {
                     
                     if (deleteError) {
                         console.error('Error al limpiar registro inconsistente:', deleteError);
+                        mostrarError('Error al limpiar datos inconsistentes. Por favor, contacte al administrador.');
+                        return;
                     } else {
                         console.log('Registro inconsistente limpiado con éxito');
                     }
                 } catch (cleanupError) {
                     console.error('Error durante la limpieza:', cleanupError);
+                    mostrarError('Error al limpiar datos inconsistentes. Por favor, contacte al administrador.');
+                    return;
                 }
             }
+
+            console.log('Continuando con la creación del usuario...');
 
             const result = await response.json();
             console.log('Resultado de verificación en Auth:', result);
