@@ -2,7 +2,7 @@
 import auth, { supabase, mostrarError, mostrarExito } from './auth.js';
 
 // Versión del módulo
-const VERSION = '1.0.2';
+const VERSION = '1.0.3';
 
 // Configuración
 const CONFIG = {
@@ -42,6 +42,14 @@ async function handleNuevoUsuario() {
         console.log('Verificando email:', email);
 
         try {
+            // Obtener la sesión actual primero
+            const { data: { session: currentSession }, error: sessionError } = await supabase.auth.getSession();
+            if (sessionError) throw sessionError;
+
+            if (!currentSession) {
+                throw new Error('No hay sesión activa');
+            }
+
             // 1. Verificar si el email existe en la tabla usuarios
             const { data: existingUsers, error: checkError } = await supabase
                 .from('usuarios')
