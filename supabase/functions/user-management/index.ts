@@ -89,6 +89,17 @@ serve(async (req: Request) => {
           throw new Error('Missing required fields for user creation');
         }
         
+        // 0. Verificar si el usuario ya existe
+        const { data: existingUser } = await supabaseClient.auth.admin.listUsers({
+          filters: {
+            email: data.email
+          }
+        });
+
+        if (existingUser?.users?.length > 0) {
+          throw new Error('El email ya está registrado. Por favor, utilice un email diferente.');
+        }
+
         // 1. Crear usuario en Auth
         const { data: authData, error: createError } = await supabaseClient.auth.admin.createUser({
           email: data.email,
@@ -97,7 +108,12 @@ serve(async (req: Request) => {
           user_metadata: { rol: data.rol }
         });
 
-        if (createError) throw createError;
+        if (createError) {
+          if (createError.message.includes('already been registered')) {
+            throw new Error('El email ya está registrado. Por favor, utilice un email diferente.');
+          }
+          throw createError;
+        }
 
         try {
           // 2. Crear registro en tabla usuarios

@@ -36,6 +36,22 @@ async function handleNuevoUsuario() {
             return;
         }
 
+        // Verificar si el email ya existe en la tabla usuarios
+        const { data: existingUser, error: checkError } = await supabase
+            .from('usuarios')
+            .select('id')
+            .eq('email', email)
+            .single();
+
+        if (checkError && checkError.code !== 'PGRST116') { // PGRST116 es el código cuando no se encuentra registro
+            throw checkError;
+        }
+
+        if (existingUser) {
+            mostrarError('El email ya está registrado. Por favor, utilice un email diferente.');
+            return;
+        }
+
         if (!rol) {
             mostrarError('Por favor, seleccione un rol');
             return;
@@ -87,7 +103,12 @@ async function handleNuevoUsuario() {
 
         const result = await response.json();
         if (!response.ok) {
-            throw new Error(result.error || 'Error al crear usuario');
+            const errorMessage = result.error || 'Error al crear usuario';
+            if (errorMessage.includes('email ya está registrado')) {
+                mostrarError(errorMessage);
+                return;
+            }
+            throw new Error(errorMessage);
         }
 
         const userId = result.userId;
