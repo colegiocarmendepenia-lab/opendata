@@ -2,7 +2,7 @@
 import auth, { supabase, mostrarError, mostrarExito } from './auth.js';
 
 // Versión del módulo
-const VERSION = '1.0.5';
+const VERSION = '1.0.6';
 
 // Configuración
 const CONFIG = {
@@ -77,17 +77,6 @@ async function handleNuevoUsuario() {
             }
 
             console.log('Continuando con la creación del usuario...');
-
-            const result = await response.json();
-            console.log('Resultado de verificación en Auth:', result);
-
-            if (!response.ok || result.exists) {
-                console.log('Email encontrado en Auth:', result);
-                mostrarError('El email ya está registrado. Por favor, utilice un email diferente.');
-                return;
-            }
-
-            console.log('Email disponible en ambos sistemas, continuando con la creación...');
             
         } catch (error) {
             console.error('Error al verificar disponibilidad del email:', error);
