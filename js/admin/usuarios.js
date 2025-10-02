@@ -1,6 +1,9 @@
 // Gestión de usuarios
 import auth, { supabase, mostrarError, mostrarExito } from './auth.js';
 
+// Versión del módulo
+const VERSION = '1.0.0';
+
 // Configuración
 const CONFIG = {
     baseUrl: 'https://yjrrtufenyfuhdycueyo.functions.supabase.co',  // URL de Supabase Edge Functions
@@ -37,18 +40,17 @@ async function handleNuevoUsuario() {
         }
 
         // Verificar si el email ya existe en la tabla usuarios
-        const { data: existingUser, error: checkError } = await supabase
+        const { data: existingUsers, error: checkError } = await supabase
             .from('usuarios')
             .select('id')
-            .eq('email', email)
-            .single()
-            .throwOnError();
+            .eq('email', email);
 
-        if (checkError && checkError.code !== 'PGRST116') { // PGRST116 es el código cuando no se encuentra registro
+        if (checkError) {
+            console.error('Error al verificar email:', checkError);
             throw checkError;
         }
 
-        if (existingUser) {
+        if (existingUsers && existingUsers.length > 0) {
             mostrarError('El email ya está registrado. Por favor, utilice un email diferente.');
             return;
         }
@@ -192,6 +194,9 @@ async function cargarListaUsuarios() {
         const template = document.createElement('template');
         template.innerHTML = `
             <div class="card">
+                <div class="position-absolute top-0 end-0 p-2">
+                    <small class="text-muted">v${VERSION}</small>
+                </div>
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h5 class="mb-0">Gestión de Usuarios</h5>
                     <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#nuevoUsuarioModal">
