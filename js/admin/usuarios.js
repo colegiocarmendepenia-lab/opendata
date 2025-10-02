@@ -3,7 +3,7 @@ import auth, { supabase, mostrarError, mostrarExito } from './auth.js';
 
 // Configuración
 const CONFIG = {
-    baseUrl: 'https://bvyhhftqpjxpfqbmbavt.functions.supabase.co',  // URL de Supabase Edge Functions
+    baseUrl: 'https://yjrrtufenyfuhdycueyo.functions.supabase.co',  // URL de Supabase Edge Functions
     defaultRedirect: '/login.html'
 };
 
