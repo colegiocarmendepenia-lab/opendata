@@ -234,7 +234,37 @@
 
         <!-- Configuración Section -->
         <div class="section" id="configuracionSection" style="display: none;">
-            <!-- Se implementará en admin-config.js -->
+            <div class="row">
+                <div class="col-12 mb-4">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Políticas de Seguridad</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>Tabla</th>
+                                            <th>Consultar</th>
+                                            <th>Agregar</th>
+                                            <th>Editar</th>
+                                            <th>Eliminar</th>
+                                            <th>Acciones</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="tablaPoliticas">
+                                        <!-- Se llenará dinámicamente -->
+                                    </tbody>
+                                </table>
+                                <button class="btn btn-primary mt-3" data-bs-toggle="modal" data-bs-target="#nuevaPoliticaModal">
+                                    <i class="bi bi-shield-plus"></i> Nueva Política
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -353,6 +383,161 @@
         </div>
     </div>
 
+    <!-- Modal Políticas de Seguridad -->
+    <div class="modal fade" id="nuevaPoliticaModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Gestionar Política de Seguridad</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="formPolitica">
+                        <div class="mb-3">
+                            <label for="nombreTabla" class="form-label">Tabla</label>
+                            <select class="form-select" id="nombreTabla" required>
+                                <option value="">Seleccione una tabla</option>
+                                <option value="usuarios">Usuarios</option>
+                                <option value="perfiles">Perfiles</option>
+                                <option value="datasets">Datasets</option>
+                                <option value="descargas">Descargas</option>
+                                <option value="actividad">Actividad</option>
+                            </select>
+                        </div>
+
+                        <!-- Políticas de Consulta -->
+                        <div class="mb-3">
+                            <label class="form-label">Política de Consulta (SELECT)</label>
+                            <div class="card">
+                                <div class="card-body">
+                                    <div class="mb-2">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="consultaPublico">
+                                            <label class="form-check-label" for="consultaPublico">Público</label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="consultaAutenticado">
+                                            <label class="form-check-label" for="consultaAutenticado">Usuario Autenticado</label>
+                                        </div>
+                                    </div>
+                                    <div class="mb-2">
+                                        <label class="form-label">Roles permitidos:</label>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="consultaAdmin">
+                                            <label class="form-check-label" for="consultaAdmin">Administrador</label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="consultaProfesor">
+                                            <label class="form-check-label" for="consultaProfesor">Profesor</label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="consultaEstudiante">
+                                            <label class="form-check-label" for="consultaEstudiante">Estudiante</label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Políticas de Inserción -->
+                        <div class="mb-3">
+                            <label class="form-label">Política de Inserción (INSERT)</label>
+                            <div class="card">
+                                <div class="card-body">
+                                    <div class="mb-2">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="insertarAutenticado">
+                                            <label class="form-check-label" for="insertarAutenticado">Usuario Autenticado</label>
+                                        </div>
+                                    </div>
+                                    <div class="mb-2">
+                                        <label class="form-label">Roles permitidos:</label>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="insertarAdmin">
+                                            <label class="form-check-label" for="insertarAdmin">Administrador</label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="insertarProfesor">
+                                            <label class="form-check-label" for="insertarProfesor">Profesor</label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="insertarEstudiante">
+                                            <label class="form-check-label" for="insertarEstudiante">Estudiante</label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Políticas de Actualización -->
+                        <div class="mb-3">
+                            <label class="form-label">Política de Actualización (UPDATE)</label>
+                            <div class="card">
+                                <div class="card-body">
+                                    <div class="mb-2">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="actualizarAutenticado">
+                                            <label class="form-check-label" for="actualizarAutenticado">Usuario Autenticado</label>
+                                        </div>
+                                    </div>
+                                    <div class="mb-2">
+                                        <label class="form-label">Roles permitidos:</label>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="actualizarAdmin">
+                                            <label class="form-check-label" for="actualizarAdmin">Administrador</label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="actualizarProfesor">
+                                            <label class="form-check-label" for="actualizarProfesor">Profesor</label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="actualizarEstudiante">
+                                            <label class="form-check-label" for="actualizarEstudiante">Estudiante</label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Políticas de Eliminación -->
+                        <div class="mb-3">
+                            <label class="form-label">Política de Eliminación (DELETE)</label>
+                            <div class="card">
+                                <div class="card-body">
+                                    <div class="mb-2">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="eliminarAutenticado">
+                                            <label class="form-check-label" for="eliminarAutenticado">Usuario Autenticado</label>
+                                        </div>
+                                    </div>
+                                    <div class="mb-2">
+                                        <label class="form-label">Roles permitidos:</label>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="eliminarAdmin">
+                                            <label class="form-check-label" for="eliminarAdmin">Administrador</label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="eliminarProfesor">
+                                            <label class="form-check-label" for="eliminarProfesor">Profesor</label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="eliminarEstudiante">
+                                            <label class="form-check-label" for="eliminarEstudiante">Estudiante</label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" id="btnGuardarPolitica">Guardar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <!-- Chart.js -->
@@ -365,5 +550,6 @@
     <script src="../js/admin/reportes.js" type="module"></script>
     <script src="../js/admin/config.js" type="module"></script>
     <script src="../js/admin/perfiles-ui.js" type="module"></script>
+    <script src="../js/admin/politicas.js" type="module"></script>
 </body>
 </html>
