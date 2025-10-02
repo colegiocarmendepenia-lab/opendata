@@ -126,7 +126,87 @@ const CONFIG = {
     defaultRedirect: '/login.html'
 };
 
-document.addEventListener('DOMContentLoaded', async () => {
+// Función para crear nuevo usuario
+async function handleNuevoUsuario() {
+    try {
+        const email = document.getElementById('email').value.trim();
+        const rol = document.getElementById('rol').value;
+        const perfilId = document.getElementById('perfil').value;
+        
+        // Validar campos
+        if (!email || !rol) {
+            mostrarError('Todos los campos son obligatorios');
+            return;
+        }
+
+        // Validar formato de email
+        const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+        if (!emailRegex.test(email)) {
+            mostrarError('Por favor, ingrese un email válido');
+            return;
+        }
+
+        // Generar contraseña temporal
+        const password = generateTemporaryPassword();
+
+        // Verificar si el usuario actual es administrador
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session?.user) {
+            throw new Error('No hay sesión activa');
+        }
+
+        // Obtener rol del usuario actual
+        const { data: userData, error: userError } = await supabase
+            .from('usuarios')
+            .select('rol')
+            .eq('id', session.user.id)
+            .single();
+
+        if (userError || userData?.rol !== 'admin') {
+            throw new Error('No tiene permisos para crear usuarios');
+        }
+
+        // Crear usuario
+        const { data: authData, error: authError } = await supabase.auth.admin.createUser({
+            email: email,
+            password: password,
+            email_confirm: true,
+            user_metadata: { rol: rol }
+        });
+
+        if (authError) throw authError;
+
+        // Crear registro en tabla usuarios
+        const { error: insertError } = await supabase
+            .from('usuarios')
+            .insert([{
+                id: authData.user.id,
+                email: email,
+                rol: rol,
+                perfil_id: perfilId || null
+            }]);
+
+        if (insertError) throw insertError;
+
+        // Registrar la actividad
+        await registrarActividad('crear_usuario', authData.user.id);
+
+        // Mostrar mensaje de éxito
+        mostrarExito('Usuario creado exitosamente');
+
+        // Cerrar modal y actualizar lista
+        const modal = bootstrap.Modal.getInstance(document.getElementById('nuevoUsuarioModal'));
+        modal.hide();
+        await cargarListaUsuarios();
+
+    } catch (error) {
+        console.error('Error al crear usuario:', error);
+        mostrarError(error.message);
+    }
+}
+
+// Inicializar eventos cuando el DOM esté listo
+document.addEventListener('DOMContentLoaded', () => {
     // Referencias a elementos del DOM
     const btnGuardarUsuario = document.getElementById('btnGuardarUsuario');
     if (btnGuardarUsuario) {
@@ -232,7 +312,8 @@ async function cargarListaUsuarios() {
         const usuariosSection = document.getElementById('usuariosSection');
         if (!usuariosSection) return;
 
-        usuariosSection.innerHTML = `
+        const template = document.createElement('template');
+        template.innerHTML = `
             <div class="card">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h5 class="mb-0">Gestión de Usuarios</h5>
@@ -274,7 +355,10 @@ async function cargarListaUsuarios() {
                     </div>
                 </div>
             </div>
-        `;
+        `.trim();
+        
+        usuariosSection.innerHTML = '';
+        usuariosSection.appendChild(template.content);
     } catch (error) {
         console.error('Error al cargar usuarios:', error);
         mostrarError('Error al cargar la lista de usuarios');
