@@ -7,214 +7,16 @@ const CONFIG = {
     defaultRedirect: '/login.html'
 };
 
-document.addEventListener('DOMContentLoaded', async () => {
-    // Referencias a elementos del DOM
-    const btnGuardarUsuario = document.getElementById('btnGuardarUsuario');
-    const formNuevoUsuario = document.getElementById('formNuevoUsuario');
-
-    // Event listeners
-    if (btnGuardarUsuario) {
-        btnGuardarUsuario.addEventListener('click', handleNuevoUsuario);
-    }
-
-    // Cargar lista de usuarios al mostrar la sección
-    document.querySelector('.nav-link[data-section="usuarios"]').addEventListener('click', () => {
-        cargarListaUsuarios();
-    });
-});
-
-// Función para crear nuevo usuario
-async function handleNuevoUsuario() {
-    try {
-        const email = document.getElementById('email').value.trim();
-        const rol = document.getElementById('rol').value;
-        const perfilId = document.getElementById('perfil').value;
-        
-        // Validación más estricta del email
-        const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-        if (!email || !emailRegex.test(email)) {
-            mostrarError('Por favor, ingrese un email válido (ejemplo: usuario@dominio.com)');
-            return;
-        }
-
-        if (!rol) {
-            mostrarError('Por favor, seleccione un rol');
-            return;
-        }
-
-        const password = generateTemporaryPassword(); // Generar contraseña temporal
-        
-        console.log('Intentando crear usuario con:', {
-            email,
-            rol,
-            perfilId
-        });
-
-        // 1. Crear usuario en Auth
-        const { data: authData, error: authError } = await supabase.auth.signUp({
-            email: email,
-            password: password,
-            options: {
-                data: {
-                    rol: rol
-                },
-                emailRedirectTo: `${window.location.origin}/login.html`
-            }
-        });
-
-        if (authError) {
-            console.error('Error de autenticación:', authError);
-            throw new Error(authError.message);
-        }
-
-        if (!authData?.user?.id) {
-            throw new Error('No se pudo crear el usuario en Auth');
-
-        // 2. Crear registro en tabla usuarios
-        const { data: userData, error: userError } = await supabase
-            .from('usuarios')
-            .insert([
-                {
-                    id: authData.user.id,
-                    email: email,
-                    rol: rol,
-                    perfil_id: perfilId
-                }
-            ]);
-
-        if (userError) throw userError;
-
-        // 3. Registrar actividad
-        await registrarActividad('crear_usuario', authData.user.id);
-
-        // 4. Mostrar mensaje de éxito
-        mostrarExito('Usuario creado exitosamente');
-        
-        // 5. Cerrar modal y actualizar lista
-        const modal = bootstrap.Modal.getInstance(document.getElementById('nuevoUsuarioModal'));
-        modal.hide();
-        await cargarListaUsuarios();
-
-    } catch (error) {
-        console.error('Error al crear usuario:', error.message);
-        mostrarError('Error al crear usuario: ' + error.message);
-    }
-}
-
-// Función para cargar lista de usuarios
-async function cargarListaUsuarios() {
-    try {
-        const { data: usuarios, error } = await supabase
-            .from('usuarios_con_perfiles')
-            .select('*')
-            .order('created_at', { ascending: false });
-
-        if (error) throw error;
-
-        // Actualizar la sección de usuarios
-        const usuariosSection = document.getElementById('usuariosSection');
-        usuariosSection.innerHTML = `
-            <div class="card">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0">Gestión de Usuarios</h5>
-                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="// Gestión de usuarios
-import auth, { supabase, mostrarError, mostrarExito } from './auth.js';
-
-// Configuración
-const CONFIG = {
-    baseUrl: window.location.origin,
-    defaultRedirect: '/login.html'
-};
-
-// Función para crear nuevo usuario
-async function handleNuevoUsuario() {
-    try {
-        const email = document.getElementById('email').value.trim();
-        const rol = document.getElementById('rol').value;
-        const perfilId = document.getElementById('perfil').value;
-        
-        // Validar campos
-        if (!email || !rol) {
-            mostrarError('Todos los campos son obligatorios');
-            return;
-        }
-
-        // Validar formato de email
-        const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-        if (!emailRegex.test(email)) {
-            mostrarError('Por favor, ingrese un email válido');
-            return;
-        }
-
-        // Generar contraseña temporal
-        const password = generateTemporaryPassword();
-
-        // Verificar si el usuario actual es administrador
-        const { data: { session } } = await supabase.auth.getSession();
-        if (!session?.user) {
-            throw new Error('No hay sesión activa');
-        }
-
-        // Obtener rol del usuario actual
-        const { data: userData, error: userError } = await supabase
-            .from('usuarios')
-            .select('rol')
-            .eq('id', session.user.id)
-            .single();
-
-        if (userError || userData?.rol !== 'admin') {
-            throw new Error('No tiene permisos para crear usuarios');
-        }
-
-        // Crear usuario
-        const { data: authData, error: authError } = await supabase.auth.admin.createUser({
-            email: email,
-            password: password,
-            email_confirm: true,
-            user_metadata: { rol: rol }
-        });
-
-        if (authError) throw authError;
-
-        // Crear registro en tabla usuarios
-        const { error: insertError } = await supabase
-            .from('usuarios')
-            .insert([{
-                id: authData.user.id,
-                email: email,
-                rol: rol,
-                perfil_id: perfilId || null
-            }]);
-
-        if (insertError) throw insertError;
-
-        // Registrar la actividad
-        await registrarActividad('crear_usuario', authData.user.id);
-
-        // Mostrar mensaje de éxito
-        mostrarExito('Usuario creado exitosamente');
-
-        // Cerrar modal y actualizar lista
-        const modal = bootstrap.Modal.getInstance(document.getElementById('nuevoUsuarioModal'));
-        modal.hide();
-        await cargarListaUsuarios();
-
-    } catch (error) {
-        console.error('Error al crear usuario:', error);
-        mostrarError(error.message);
-    }
-}
-
 // Inicializar eventos cuando el DOM esté listo
 document.addEventListener('DOMContentLoaded', () => {
-    // Referencias a elementos del DOM
+    // Referencias a elementos del DOM y event listeners
     const btnGuardarUsuario = document.getElementById('btnGuardarUsuario');
+    const usuariosLink = document.querySelector('.nav-link[data-section="usuarios"]');
+    
     if (btnGuardarUsuario) {
         btnGuardarUsuario.addEventListener('click', handleNuevoUsuario);
     }
-
-    // Cargar lista de usuarios al mostrar la sección
-    const usuariosLink = document.querySelector('.nav-link[data-section="usuarios"]');
+    
     if (usuariosLink) {
         usuariosLink.addEventListener('click', cargarListaUsuarios);
     }
@@ -227,21 +29,17 @@ async function handleNuevoUsuario() {
         const rol = document.getElementById('rol').value;
         const perfilId = document.getElementById('perfil').value;
         
-        // Validar campos
-        if (!email || !rol) {
-            mostrarError('Todos los campos son obligatorios');
-            return;
-        }
-
-        // Validar formato de email
+        // Validación del email
         const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-        if (!emailRegex.test(email)) {
-            mostrarError('Por favor, ingrese un email válido');
+        if (!email || !emailRegex.test(email)) {
+            mostrarError('Por favor, ingrese un email válido (ejemplo: usuario@dominio.com)');
             return;
         }
 
-        // Generar contraseña temporal
-        const password = generateTemporaryPassword();
+        if (!rol) {
+            mostrarError('Por favor, seleccione un rol');
+            return;
+        }
 
         // Verificar si el usuario actual es administrador
         const { data: { session } } = await supabase.auth.getSession();
@@ -260,7 +58,10 @@ async function handleNuevoUsuario() {
             throw new Error('No tiene permisos para crear usuarios');
         }
 
-        // Crear usuario
+        // Generar contraseña temporal
+        const password = generateTemporaryPassword();
+
+        // 1. Crear usuario en Auth
         const { data: authData, error: authError } = await supabase.auth.admin.createUser({
             email: email,
             password: password,
@@ -270,7 +71,7 @@ async function handleNuevoUsuario() {
 
         if (authError) throw authError;
 
-        // Crear registro en tabla usuarios
+        // 2. Crear registro en tabla usuarios
         const { error: insertError } = await supabase
             .from('usuarios')
             .insert([{
@@ -282,15 +83,17 @@ async function handleNuevoUsuario() {
 
         if (insertError) throw insertError;
 
-        // Registrar la actividad
+        // 3. Registrar actividad
         await registrarActividad('crear_usuario', authData.user.id);
 
-        // Mostrar mensaje de éxito
+        // 4. Mostrar mensaje de éxito
         mostrarExito('Usuario creado exitosamente');
-
-        // Cerrar modal y actualizar lista
+        
+        // 5. Cerrar modal y actualizar lista
         const modal = bootstrap.Modal.getInstance(document.getElementById('nuevoUsuarioModal'));
-        modal.hide();
+        if (modal) {
+            modal.hide();
+        }
         await cargarListaUsuarios();
 
     } catch (error) {
@@ -341,7 +144,7 @@ async function cargarListaUsuarios() {
                                         <td><span class="badge bg-secondary">${usuario.perfil_nombre || 'Sin perfil'}</span></td>
                                         <td>${new Date(usuario.created_at).toLocaleDateString()}</td>
                                         <td>
-                                            <button class="btn btn-sm btn-info" onclick="editarUsuario('${usuario.id}')">
+                                            <button class="btn btn-sm btn-info me-1" onclick="editarUsuario('${usuario.id}')">
                                                 <i class="bi bi-pencil"></i>
                                             </button>
                                             <button class="btn btn-sm btn-danger" onclick="eliminarUsuario('${usuario.id}')">
@@ -359,87 +162,9 @@ async function cargarListaUsuarios() {
         
         usuariosSection.innerHTML = '';
         usuariosSection.appendChild(template.content);
+
     } catch (error) {
         console.error('Error al cargar usuarios:', error);
-        mostrarError('Error al cargar la lista de usuarios');
-    }
-}
-
-// Funciones auxiliares
-function generateTemporaryPassword() {
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*';
-    return Array.from(crypto.getRandomValues(new Uint8Array(12)))
-        .map(x => chars[x % chars.length])
-        .join('');
-}
-
-function getRolBadgeColor(rol) {
-    switch(rol) {
-        case 'admin': return 'danger';
-        case 'profesor': return 'success';
-        case 'estudiante': return 'info';
-        default: return 'secondary';
-    }
-}
-
-async function registrarActividad(tipo, usuarioId, detalles = {}) {
-    try {
-        await supabase
-            .from('actividad')
-            .insert([{
-                usuario_id: usuarioId,
-                tipo_accion: tipo,
-                detalles: detalles
-            }]);
-    } catch (error) {
-        console.error('Error al registrar actividad:', error);
-    }
-}
-
-// Exportar funciones para uso global
-window.editarUsuario = editarUsuario;
-window.eliminarUsuario = eliminarUsuario;
-window.guardarCambiosUsuario = guardarCambiosUsuario;nuevoUsuarioModal">
-                        <i class="bi bi-person-plus"></i> Nuevo Usuario
-                    </button>
-                </div>
-                <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table table-hover">
-                            <thead>
-                                <tr>
-                                    <th>Email</th>
-                                    <th>Rol</th>
-                                    <th>Perfil</th>
-                                    <th>Fecha de Creación</th>
-                                    <th>Acciones</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                ${usuarios.map(usuario => `
-                                    <tr>
-                                        <td>${usuario.email}</td>
-                                        <td><span class="badge bg-${getRolBadgeColor(usuario.rol)}">${usuario.rol}</span></td>
-                                        <td><span class="badge bg-secondary">${usuario.perfil_nombre || 'Sin perfil'}</span></td>
-                                        <td>${new Date(usuario.created_at).toLocaleDateString()}</td>
-                                        <td>
-                                            <button class="btn btn-sm btn-info" onclick="editarUsuario('${usuario.id}')">
-                                                <i class="bi bi-pencil"></i>
-                                            </button>
-                                            <button class="btn btn-sm btn-danger" onclick="eliminarUsuario('${usuario.id}')">
-                                                <i class="bi bi-trash"></i>
-                                            </button>
-                                        </td>
-                                    </tr>
-                                `).join('')}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        `;
-    } catch (error) {
-        console.error('Error al cargar usuarios:', error.message);
         mostrarError('Error al cargar la lista de usuarios');
     }
 }
@@ -462,6 +187,12 @@ async function editarUsuario(userId) {
             .order('nombre');
 
         if (perfilesError) throw perfilesError;
+
+        // Eliminar modal anterior si existe
+        const modalAnterior = document.getElementById('editarUsuarioModal');
+        if (modalAnterior) {
+            modalAnterior.remove();
+        }
 
         // Crear y mostrar modal de edición
         const modalHtml = `
@@ -523,7 +254,7 @@ async function editarUsuario(userId) {
         });
 
     } catch (error) {
-        console.error('Error al editar usuario:', error.message);
+        console.error('Error al editar usuario:', error);
         mostrarError('Error al editar usuario');
     }
 }
@@ -549,12 +280,14 @@ async function guardarCambiosUsuario(userId) {
 
         // Cerrar modal y actualizar lista
         const modal = bootstrap.Modal.getInstance(document.getElementById('editarUsuarioModal'));
-        modal.hide();
+        if (modal) {
+            modal.hide();
+        }
+        
         await cargarListaUsuarios();
-
         mostrarExito('Usuario actualizado exitosamente');
     } catch (error) {
-        console.error('Error al guardar cambios:', error.message);
+        console.error('Error al guardar cambios:', error);
         mostrarError('Error al guardar los cambios');
     }
 }
@@ -579,21 +312,22 @@ async function eliminarUsuario(userId) {
         // 3. Registrar actividad
         await registrarActividad('eliminar_usuario', userId);
 
-        // 4. Actualizar lista
+        // 4. Actualizar lista y mostrar mensaje
         await cargarListaUsuarios();
-
-        // 5. Mostrar mensaje de éxito
         mostrarExito('Usuario eliminado exitosamente');
 
     } catch (error) {
-        console.error('Error al eliminar usuario:', error.message);
+        console.error('Error al eliminar usuario:', error);
         mostrarError('Error al eliminar usuario: ' + error.message);
     }
 }
 
 // Funciones auxiliares
 function generateTemporaryPassword() {
-    return Math.random().toString(36).slice(-8) + Math.random().toString(36).slice(-8);
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*';
+    return Array.from(crypto.getRandomValues(new Uint8Array(12)))
+        .map(x => chars[x % chars.length])
+        .join('');
 }
 
 function getRolBadgeColor(rol) {
@@ -615,11 +349,11 @@ async function registrarActividad(tipo, usuarioId, detalles = {}) {
                 detalles: detalles
             }]);
     } catch (error) {
-        console.error('Error al registrar actividad:', error.message);
+        console.error('Error al registrar actividad:', error);
     }
 }
 
-// Hacer las funciones disponibles globalmente para los botones en el HTML
+// Exportar funciones para uso global
 window.editarUsuario = editarUsuario;
 window.eliminarUsuario = eliminarUsuario;
 window.guardarCambiosUsuario = guardarCambiosUsuario;
