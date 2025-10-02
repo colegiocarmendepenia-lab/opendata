@@ -19,9 +19,11 @@ async function cargarTablas() {
         if (selectTabla) {
             selectTabla.innerHTML = `
                 <option value="">Seleccione una tabla</option>
-                ${tablas.map(tabla => `
-                    <option value="${tabla}">${tabla.charAt(0).toUpperCase() + tabla.slice(1)}</option>
-                `).join('')}
+                ${tablas.map(tabla => {
+                    // Asegurarse de que tabla.table_name existe, si no, usar tabla directamente
+                    const nombreTabla = tabla.table_name || tabla;
+                    return `<option value="${nombreTabla}">${nombreTabla.charAt(0).toUpperCase() + nombreTabla.slice(1)}</option>`;
+                }).join('')}
             `;
         }
     } catch (error) {
