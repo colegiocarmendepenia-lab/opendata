@@ -62,14 +62,20 @@ async function handleNuevoUsuario() {
         const password = generateTemporaryPassword();
 
         // 1. Crear usuario en Auth
-        const { data: authData, error: authError } = await supabase.auth.admin.createUser({
+        const { data: authData, error: authError } = await supabase.auth.signUp({
             email: email,
             password: password,
-            email_confirm: true,
-            user_metadata: { rol: rol }
+            options: {
+                data: { rol: rol },
+                emailRedirectTo: `${window.location.origin}/login.html`
+            }
         });
 
         if (authError) throw authError;
+        
+        if (!authData?.user?.id) {
+            throw new Error('No se pudo crear el usuario en Auth');
+        }
 
         // 2. Crear registro en tabla usuarios
         const { error: insertError } = await supabase
@@ -297,8 +303,11 @@ async function eliminarUsuario(userId) {
     if (!confirm('¿Está seguro de que desea eliminar este usuario?')) return;
 
     try {
-        // 1. Eliminar usuario de Auth
-        const { error: authError } = await supabase.auth.admin.deleteUser(userId);
+        // 1. Como no tenemos acceso admin, solo desactivamos el usuario en nuestra tabla
+        const { error: authError } = await supabase
+            .from('usuarios')
+            .update({ activo: false })
+            .eq('id', userId);
         if (authError) throw authError;
 
         // 2. Eliminar registro de tabla usuarios
