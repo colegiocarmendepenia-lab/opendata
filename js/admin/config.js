@@ -1,4 +1,6 @@
 // Gestión de configuración
+import { supabase, mostrarError, mostrarExito } from './auth.js';
+
 document.addEventListener('DOMContentLoaded', async () => {
     // Cargar configuración al mostrar la sección
     document.querySelector('.nav-link[data-section="configuracion"]').addEventListener('click', () => {

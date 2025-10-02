@@ -19,10 +19,16 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 // Función para crear nuevo usuario
 async function handleNuevoUsuario() {
-    const email = document.getElementById('email').value;
+    const email = document.getElementById('email').value.trim();
     const rol = document.getElementById('rol').value;
     const perfilId = document.getElementById('perfil').value;
     const password = generateTemporaryPassword(); // Generar contraseña temporal
+
+    // Validar el email
+    if (!email || !email.includes('@')) {
+        mostrarError('Por favor, ingrese un email válido');
+        return;
+    }
 
     try {
         // 1. Crear usuario en Auth
