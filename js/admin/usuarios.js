@@ -42,8 +42,8 @@ async function handleNuevoUsuario() {
         }
 
         // Verificar si el usuario actual es administrador
-        const { data: { session } } = await supabase.auth.getSession();
-        if (!session?.user) {
+        const { data: sessionData } = await supabase.auth.getSession();
+        if (!sessionData?.session?.user) {
             throw new Error('No hay sesión activa');
         }
 
@@ -51,7 +51,7 @@ async function handleNuevoUsuario() {
         const { data: userData, error: userError } = await supabase
             .from('usuarios')
             .select('rol')
-            .eq('id', session.user.id)
+            .eq('id', sessionData.session.user.id)
             .single();
 
         if (userError || userData?.rol !== 'admin') {
@@ -61,27 +61,42 @@ async function handleNuevoUsuario() {
         // Generar contraseña temporal
         const password = generateTemporaryPassword();
 
-        // 1. Crear usuario en Auth
-        const { data: authData, error: authError } = await supabase.auth.signUp({
-            email: email,
-            password: password,
-            options: {
-                data: { rol: rol },
-                emailRedirectTo: `${window.location.origin}/login.html`
-            }
-        });
+        // 1. Obtener token de la sesión actual
+        const { data: { session: currentSession }, error: sessionError } = await supabase.auth.getSession();
+        if (sessionError) throw sessionError;
 
-        if (authError) throw authError;
-        
-        if (!authData?.user?.id) {
-            throw new Error('No se pudo crear el usuario en Auth');
+        if (!currentSession) {
+            throw new Error('No hay sesión activa');
         }
 
-        // 2. Crear registro en tabla usuarios
+        // 2. Llamar a la Edge Function para crear el usuario
+        const response = await fetch(`${CONFIG.baseUrl}/functions/v1/user-management`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${currentSession.access_token}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                action: 'create',
+                email: email,
+                password: password,
+                rol: rol,
+                perfilId: perfilId
+            })
+        });
+
+        const result = await response.json();
+        if (!response.ok) {
+            throw new Error(result.error || 'Error al crear usuario');
+        }
+
+        const userId = result.userId;
+
+        // 3. Crear registro en tabla usuarios
         const { error: insertError } = await supabase
             .from('usuarios')
             .insert([{
-                id: authData.user.id,
+                id: userId,
                 email: email,
                 rol: rol,
                 perfil_id: perfilId || null
@@ -303,12 +318,31 @@ async function eliminarUsuario(userId) {
     if (!confirm('¿Está seguro de que desea eliminar este usuario?')) return;
 
     try {
-        // 1. Como no tenemos acceso admin, solo desactivamos el usuario en nuestra tabla
-        const { error: authError } = await supabase
-            .from('usuarios')
-            .update({ activo: false })
-            .eq('id', userId);
-        if (authError) throw authError;
+        // 1. Obtener token de la sesión actual
+        const { data: { session: currentSession }, error: sessionError } = await supabase.auth.getSession();
+        if (sessionError) throw sessionError;
+
+        if (!currentSession) {
+            throw new Error('No hay sesión activa');
+        }
+
+        // 2. Llamar a la Edge Function para eliminar el usuario
+        const response = await fetch(`${CONFIG.baseUrl}/functions/v1/user-management`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${currentSession.access_token}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                action: 'delete',
+                userId: userId
+            })
+        });
+
+        const result = await response.json();
+        if (!response.ok) {
+            throw new Error(result.error || 'Error al eliminar usuario');
+        }
 
         // 2. Eliminar registro de tabla usuarios
         const { error: userError } = await supabase
