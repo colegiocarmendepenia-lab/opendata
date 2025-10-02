@@ -19,9 +19,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 // Función para crear nuevo usuario
 async function handleNuevoUsuario() {
-    const nombre = document.getElementById('nombre').value;
     const email = document.getElementById('email').value;
     const rol = document.getElementById('rol').value;
+    const perfilId = document.getElementById('perfil').value;
     const password = generateTemporaryPassword(); // Generar contraseña temporal
 
     try {
@@ -40,9 +40,9 @@ async function handleNuevoUsuario() {
             .insert([
                 {
                     id: authData.user.id,
-                    nombre: nombre,
                     email: email,
-                    rol: rol
+                    rol: rol,
+                    perfil_id: perfilId
                 }
             ]);
 
@@ -69,7 +69,7 @@ async function handleNuevoUsuario() {
 async function cargarListaUsuarios() {
     try {
         const { data: usuarios, error } = await supabase
-            .from('usuarios')
+            .from('usuarios_con_perfiles')
             .select('*')
             .order('created_at', { ascending: false });
 
@@ -90,9 +90,9 @@ async function cargarListaUsuarios() {
                         <table class="table table-hover">
                             <thead>
                                 <tr>
-                                    <th>Nombre</th>
                                     <th>Email</th>
                                     <th>Rol</th>
+                                    <th>Perfil</th>
                                     <th>Fecha de Creación</th>
                                     <th>Acciones</th>
                                 </tr>
@@ -100,9 +100,9 @@ async function cargarListaUsuarios() {
                             <tbody>
                                 ${usuarios.map(usuario => `
                                     <tr>
-                                        <td>${usuario.nombre || 'N/A'}</td>
                                         <td>${usuario.email}</td>
                                         <td><span class="badge bg-${getRolBadgeColor(usuario.rol)}">${usuario.rol}</span></td>
+                                        <td><span class="badge bg-secondary">${usuario.perfil_nombre || 'Sin perfil'}</span></td>
                                         <td>${new Date(usuario.created_at).toLocaleDateString()}</td>
                                         <td>
                                             <button class="btn btn-sm btn-info" onclick="editarUsuario('${usuario.id}')">
@@ -130,19 +130,114 @@ async function cargarListaUsuarios() {
 async function editarUsuario(userId) {
     try {
         const { data: usuario, error } = await supabase
-            .from('usuarios')
+            .from('usuarios_con_perfiles')
             .select('*')
             .eq('id', userId)
             .single();
 
         if (error) throw error;
 
-        // Implementar lógica de edición (modal, form, etc.)
-        // Por ahora solo mostramos alerta
-        alert('Función de edición en desarrollo');
+        // Obtener lista de perfiles para el selector
+        const { data: perfiles, error: perfilesError } = await supabase
+            .from('perfiles')
+            .select('*')
+            .order('nombre');
+
+        if (perfilesError) throw perfilesError;
+
+        // Crear y mostrar modal de edición
+        const modalHtml = `
+            <div class="modal fade" id="editarUsuarioModal" tabindex="-1">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Editar Usuario</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <form id="formEditarUsuario">
+                                <div class="mb-3">
+                                    <label class="form-label">Email</label>
+                                    <input type="email" class="form-control" value="${usuario.email}" disabled>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Rol</label>
+                                    <select class="form-select" id="editRol">
+                                        <option value="admin" ${usuario.rol === 'admin' ? 'selected' : ''}>Administrador</option>
+                                        <option value="profesor" ${usuario.rol === 'profesor' ? 'selected' : ''}>Profesor</option>
+                                        <option value="estudiante" ${usuario.rol === 'estudiante' ? 'selected' : ''}>Estudiante</option>
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Perfil</label>
+                                    <select class="form-select" id="editPerfil">
+                                        <option value="">Sin perfil</option>
+                                        ${perfiles.map(p => `
+                                            <option value="${p.id}" ${p.id === usuario.perfil_id ? 'selected' : ''}>
+                                                ${p.nombre}
+                                            </option>
+                                        `).join('')}
+                                    </select>
+                                </div>
+                            </form>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                            <button type="button" class="btn btn-primary" onclick="guardarCambiosUsuario('${userId}')">Guardar</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        // Agregar modal al DOM
+        const modalWrapper = document.createElement('div');
+        modalWrapper.innerHTML = modalHtml;
+        document.body.appendChild(modalWrapper);
+
+        // Mostrar modal
+        const modal = new bootstrap.Modal(document.getElementById('editarUsuarioModal'));
+        modal.show();
+
+        // Limpiar modal cuando se cierre
+        document.getElementById('editarUsuarioModal').addEventListener('hidden.bs.modal', function () {
+            this.remove();
+        });
+
     } catch (error) {
         console.error('Error al editar usuario:', error.message);
         mostrarError('Error al editar usuario');
+    }
+}
+
+// Función para guardar cambios del usuario
+async function guardarCambiosUsuario(userId) {
+    try {
+        const rol = document.getElementById('editRol').value;
+        const perfilId = document.getElementById('editPerfil').value || null;
+
+        const { error } = await supabase
+            .from('usuarios')
+            .update({ 
+                rol: rol,
+                perfil_id: perfilId
+            })
+            .eq('id', userId);
+
+        if (error) throw error;
+
+        // Registrar actividad
+        await registrarActividad('editar_usuario', userId);
+
+        // Cerrar modal y actualizar lista
+        const modal = bootstrap.Modal.getInstance(document.getElementById('editarUsuarioModal'));
+        modal.hide();
+        await cargarListaUsuarios();
+
+        mostrarExito('Usuario actualizado exitosamente');
+    } catch (error) {
+        console.error('Error al guardar cambios:', error.message);
+        mostrarError('Error al guardar los cambios');
     }
 }
 
@@ -209,3 +304,4 @@ async function registrarActividad(tipo, usuarioId, detalles = {}) {
 // Hacer las funciones disponibles globalmente para los botones en el HTML
 window.editarUsuario = editarUsuario;
 window.eliminarUsuario = eliminarUsuario;
+window.guardarCambiosUsuario = guardarCambiosUsuario;

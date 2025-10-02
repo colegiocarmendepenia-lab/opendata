@@ -44,6 +44,11 @@
                         </a>
                     </li>
                     <li class="nav-item">
+                        <a class="nav-link" href="#" data-section="perfiles" data-bs-toggle="tooltip" title="Gestión de perfiles de usuario">
+                            <i class="bi bi-person-badge"></i> Perfiles
+                        </a>
+                    </li>
+                    <li class="nav-item">
                         <a class="nav-link" href="#" data-section="configuracion" data-bs-toggle="tooltip" title="Ajustes del sistema y preferencias">
                             <i class="bi bi-gear"></i> Configuración
                         </a>
@@ -194,6 +199,39 @@
             <!-- Se implementará en admin-reportes.js -->
         </div>
 
+        <!-- Perfiles Section -->
+        <div class="section" id="perfilesSection" style="display: none;">
+            <div class="row">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h5 class="card-title mb-0">Gestión de Perfiles</h5>
+                            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#nuevoPerfilModal">
+                                <i class="bi bi-plus-circle"></i> Nuevo Perfil
+                            </button>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>ID</th>
+                                            <th>Nombre</th>
+                                            <th>Descripción</th>
+                                            <th>Acciones</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="tablaPerfiles">
+                                        <!-- Se llenará dinámicamente -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Configuración Section -->
         <div class="section" id="configuracionSection" style="display: none;">
             <!-- Se implementará en admin-config.js -->
@@ -228,11 +266,46 @@
                                 <option value="estudiante">Estudiante</option>
                             </select>
                         </div>
+                        <div class="mb-3">
+                            <label for="perfil" class="form-label">Perfil</label>
+                            <select class="form-select" id="perfil" required>
+                                <option value="">Seleccione un perfil</option>
+                                <!-- Se llenará dinámicamente -->
+                            </select>
+                        </div>
                     </form>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
                     <button type="button" class="btn btn-primary" id="btnGuardarUsuario">Guardar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Nuevo Perfil -->
+    <div class="modal fade" id="nuevoPerfilModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Nuevo Perfil</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="formNuevoPerfil">
+                        <div class="mb-3">
+                            <label for="nombrePerfil" class="form-label">Nombre</label>
+                            <input type="text" class="form-control" id="nombrePerfil" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="descripcionPerfil" class="form-label">Descripción</label>
+                            <textarea class="form-control" id="descripcionPerfil" rows="3" required></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" id="btnGuardarPerfil">Guardar</button>
                 </div>
             </div>
         </div>
@@ -291,5 +364,6 @@
     <script src="../js/admin/datos.js" type="module"></script>
     <script src="../js/admin/reportes.js" type="module"></script>
     <script src="../js/admin/config.js" type="module"></script>
+    <script src="../js/admin/perfiles-ui.js" type="module"></script>
 </body>
 </html>
