@@ -1,7 +1,5 @@
 // Gestión de usuarios
-import auth, { supabase, mostrarError, mostrarE        // 2. Llamar a la Edge Function para actualizar el usuario
-        const response = await fetch(`${CONFIG.baseUrl}/functions/user-management`, {
-            method: 'POST',o } from './auth.js';
+import auth, { supabase, mostrarError, mostrarExito } from './auth.js';
 
 // Configuración
 const CONFIG = {
@@ -107,7 +105,7 @@ async function handleNuevoUsuario() {
         if (insertError) throw insertError;
 
         // 3. Registrar actividad
-        await registrarActividad('crear_usuario', authData.user.id);
+        await registrarActividad('crear_usuario', userId);
 
         // 4. Mostrar mensaje de éxito
         mostrarExito('Usuario creado exitosamente');
