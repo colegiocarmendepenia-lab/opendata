@@ -1,9 +1,11 @@
 // Gestión de usuarios
-import auth, { supabase, mostrarError, mostrarExito } from './auth.js';
+import auth, { supabase, mostrarError, mostrarE        // 2. Llamar a la Edge Function para actualizar el usuario
+        const response = await fetch(`${CONFIG.baseUrl}/functions/user-management`, {
+            method: 'POST',o } from './auth.js';
 
 // Configuración
 const CONFIG = {
-    baseUrl: window.location.origin,
+    baseUrl: 'https://bvyhhftqpjxpfqbmbavt.supabase.co',  // URL de tu proyecto Supabase
     defaultRedirect: '/login.html'
 };
 
@@ -70,7 +72,7 @@ async function handleNuevoUsuario() {
         }
 
         // 2. Llamar a la Edge Function para crear el usuario
-        const response = await fetch(`${CONFIG.baseUrl}/functions/v1/user-management`, {
+        const response = await fetch(`${CONFIG.baseUrl}/functions/user-management`, {
             method: 'POST',
             headers: {
                 'Authorization': `Bearer ${currentSession.access_token}`,
@@ -327,7 +329,7 @@ async function eliminarUsuario(userId) {
         }
 
         // 2. Llamar a la Edge Function para eliminar el usuario
-        const response = await fetch(`${CONFIG.baseUrl}/functions/v1/user-management`, {
+        const response = await fetch(`${CONFIG.baseUrl}/functions/user-management`, {
             method: 'POST',
             headers: {
                 'Authorization': `Bearer ${currentSession.access_token}`,
