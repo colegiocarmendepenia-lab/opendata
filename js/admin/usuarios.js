@@ -2,7 +2,7 @@
 import auth, { supabase, mostrarError, mostrarExito } from './auth.js';
 
 // Versión del módulo
-const VERSION = '1.0.1';
+const VERSION = '1.0.2';
 
 // Configuración
 const CONFIG = {
@@ -41,24 +41,52 @@ async function handleNuevoUsuario() {
 
         console.log('Verificando email:', email);
 
-        // Verificar si el email ya existe en la tabla usuarios
-        const { data: existingUsers, error: checkError } = await supabase
-            .from('usuarios')
-            .select('id, email')
-            .eq('email', email.toLowerCase());
+        try {
+            // 1. Verificar si el email existe en la tabla usuarios
+            const { data: existingUsers, error: checkError } = await supabase
+                .from('usuarios')
+                .select('id, email')
+                .eq('email', email.toLowerCase());
 
-        if (checkError) {
-            console.error('Error al verificar email:', checkError);
-            throw checkError;
+            if (checkError) {
+                console.error('Error al verificar email en tabla usuarios:', checkError);
+                throw checkError;
+            }
+
+            if (existingUsers && existingUsers.length > 0) {
+                console.log('Usuario existente encontrado en tabla usuarios:', existingUsers);
+                mostrarError('El email ya está registrado. Por favor, utilice un email diferente.');
+                return;
+            }
+
+            // 2. Verificar en Supabase Auth a través de la Edge Function
+            const response = await fetch(`${CONFIG.baseUrl}/user-management`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${currentSession.access_token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    action: 'check_email',
+                    email: email.toLowerCase()
+                })
+            });
+
+            const result = await response.json();
+            console.log('Resultado de verificación en Auth:', result);
+
+            if (!response.ok || result.exists) {
+                console.log('Email encontrado en Auth:', result);
+                mostrarError('El email ya está registrado. Por favor, utilice un email diferente.');
+                return;
+            }
+
+            console.log('Email disponible en ambos sistemas, continuando con la creación...');
+            
+        } catch (error) {
+            console.error('Error al verificar disponibilidad del email:', error);
+            throw error;
         }
-
-        if (existingUsers && existingUsers.length > 0) {
-            console.log('Usuario existente encontrado:', existingUsers);
-            mostrarError('El email ya está registrado. Por favor, utilice un email diferente.');
-            return;
-        }
-
-        console.log('Email disponible, continuando con la creación...');
 
         // Normalizar el rol
         if (!rol) {
