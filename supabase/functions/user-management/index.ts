@@ -3,9 +3,10 @@ import { serve } from 'https://deno.land/std@0.177.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1';
 
 const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Origin': 'https://colegiocarmendepenia-lab.github.io',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
   'Access-Control-Allow-Methods': 'POST, DELETE, OPTIONS',
+  'Access-Control-Allow-Credentials': 'true',
 };
 
 interface UserManagementRequest {
@@ -24,9 +25,12 @@ interface CustomError extends Error {
 serve(async (req: Request) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { 
-      headers: corsHeaders,
-      status: 204
+    return new Response(null, { 
+      status: 204,
+      headers: {
+        ...corsHeaders,
+        'Access-Control-Max-Age': '86400',
+      }
     });
   }
 
@@ -157,7 +161,11 @@ serve(async (req: Request) => {
     }
 
     return new Response(JSON.stringify(result), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      headers: { 
+        ...corsHeaders, 
+        'Content-Type': 'application/json',
+        'Vary': 'Origin'
+      },
       status: 200,
     });
 
