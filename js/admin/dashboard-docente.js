@@ -20,16 +20,22 @@ async function inicializarDashboard() {
     try {
         const { data: { session } } = await supabase.auth.getSession();
         if (!session) {
-            window.location.href = '/login.html';
+            window.location.href = '../login.html';
             return;
         }
 
         // Verificar rol y perfil
         const { data: usuario, error } = await supabase
-            .from('usuarios_con_perfiles')
+            .from('usuarios')
             .select('*')
             .eq('id', session.user.id)
             .single();
+
+        // Actualizar el nombre de usuario en el navbar
+        const userNameElement = document.getElementById('userName');
+        if (userNameElement && usuario) {
+            userNameElement.innerHTML = `<i class="bi bi-person"></i> ${usuario.nombre || usuario.email}`;
+        }
 
         if (error || usuario?.perfil_id !== 3) { // ID 3 = Docente
             throw new Error('No tiene permisos para acceder a este dashboard');
@@ -173,7 +179,7 @@ async function cargarAsistencias(container, puedeEditar) {
 async function handleLogout() {
     try {
         await supabase.auth.signOut();
-        window.location.href = '/login.html';
+        window.location.href = '../login.html';
     } catch (error) {
         console.error('Error al cerrar sesión:', error);
         mostrarError('Error al cerrar sesión');
