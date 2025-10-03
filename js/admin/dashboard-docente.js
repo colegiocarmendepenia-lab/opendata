@@ -1,5 +1,5 @@
 // Dashboard Docente
-import { supabase, mostrarError, mostrarExito } from './auth.js';
+import { supabase, mostrarError, mostrarExito } from '../auth.js';
 
 const VERSION = '1.0.0';
 
@@ -27,7 +27,7 @@ async function inicializarDashboard() {
         // Verificar rol y perfil
         const { data: usuario, error } = await supabase
             .from('usuarios')
-            .select('*')
+            .select('nombre, email, perfil_id')
             .eq('id', session.user.id)
             .single();
 
@@ -51,7 +51,7 @@ async function inicializarDashboard() {
         console.error('Error al inicializar dashboard:', error);
         mostrarError(error.message);
         setTimeout(() => {
-            window.location.href = '/login.html';
+            window.location.href = '../login.html';
         }, 3000);
     }
 }
