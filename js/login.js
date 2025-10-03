@@ -103,17 +103,23 @@ document.addEventListener('DOMContentLoaded', function() {
             setTimeout(() => {
                 const baseUrl = window.location.origin + window.location.pathname.replace('login.html', '');
                 switch(userData?.rol) {
-                    case 'admin':
-                        window.location.href = baseUrl + 'admin/dashboard.html';
+                    case 'coordinador':
+                        window.location.href = baseUrl + 'admin/dashboard-coordinador.html';
                         break;
-                    case 'profesor':
-                        window.location.href = baseUrl + 'profesor/dashboard.html';
+                    case 'docente':
+                        window.location.href = baseUrl + 'admin/dashboard-docente.html';
                         break;
-                    case 'estudiante':
-                        window.location.href = baseUrl + 'estudiante/dashboard.html';
+                    case 'padres':
+                        window.location.href = baseUrl + 'admin/dashboard-padres.html';
+                        break;
+                    case 'alumno':
+                        window.location.href = baseUrl + 'admin/dashboard-alumno.html';
                         break;
                     default:
-                        window.location.href = baseUrl + 'dashboard.html';
+                        // Si el rol no está definido o no coincide con ninguno de los anteriores
+                        console.error('Rol no reconocido:', userData?.rol);
+                        mostrarMensaje('Error: Rol de usuario no válido', 'error');
+                        supabase.auth.signOut(); // Cerramos la sesión por seguridad
                 }
             }, 1000);
 
