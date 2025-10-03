@@ -103,8 +103,8 @@ document.addEventListener('DOMContentLoaded', function() {
             setTimeout(() => {
                 const baseUrl = window.location.origin + window.location.pathname.replace('login.html', '');
                 switch(userData?.perfil_id) {
-                    case 1: // Coordinador
-                        window.location.href = baseUrl + 'admin/dashboard-coordinador.html';
+                    case 1: // Administrador
+                        window.location.href = baseUrl + 'admin/dashboard.html';
                         break;
                     case 2: // Alumno
                         window.location.href = baseUrl + 'admin/dashboard-alumno.html';
@@ -114,6 +114,9 @@ document.addEventListener('DOMContentLoaded', function() {
                         break;
                     case 4: // Padres
                         window.location.href = baseUrl + 'admin/dashboard-padres.html';
+                        break;
+                    case 5: // Coordinador
+                        window.location.href = baseUrl + 'admin/dashboard-coordinador.html';
                         break;
                     default:
                         // Si el perfil_id no está definido o no coincide con ninguno de los anteriores
