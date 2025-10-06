@@ -1,7 +1,8 @@
 // Dashboard Coordinador
 import { cargarEventosCalendario } from './calendario-ui.js';
+import { cargarPublicacionesUI } from './publicaciones-ui.js';
 
-const VERSION = '1.0.16';
+const VERSION = '1.0.17';
 
 // Inicializar Supabase
 const SUPABASE_URL = 'https://yjrrtufenyfuhdycueyo.supabase.co';
@@ -132,18 +133,7 @@ async function cargarSeccion(seccion) {
 // Funciones para cargar cada sección
 
 async function cargarAvisos(container, puedeEditar) {
-    // TODO: Implementar carga de avisos
-    container.innerHTML = `
-        <div class="card">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <h5 class="mb-0">Avisos</h5>
-                ${puedeEditar ? '<button class="btn btn-primary btn-sm"><i class="bi bi-plus"></i> Nuevo Aviso</button>' : ''}
-            </div>
-            <div class="card-body">
-                <p>Lista de avisos aquí</p>
-            </div>
-        </div>
-    `;
+    await cargarPublicacionesUI(container);
 }
 
 async function cargarHorarios(container, puedeEditar) {

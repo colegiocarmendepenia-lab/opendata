@@ -124,15 +124,6 @@
                             <input type="text" class="form-control" id="titulo" required>
                         </div>
                         <div class="mb-3">
-                            <label for="tipo" class="form-label">Tipo</label>
-                            <select class="form-select" id="tipo" required>
-                                <option value="">Seleccione tipo...</option>
-                                <option value="aviso">Aviso</option>
-                                <option value="noticia">Noticia</option>
-                                <option value="circular">Circular</option>
-                            </select>
-                        </div>
-                        <div class="mb-3">
                             <label for="contenido" class="form-label">Contenido</label>
                             <textarea class="form-control" id="contenido" rows="4" required></textarea>
                         </div>
@@ -145,8 +136,10 @@
                             </div>
                             <div class="col-md-6">
                                 <div class="mb-3">
-                                    <label for="fechaVigencia" class="form-label">Fecha de Vigencia</label>
-                                    <input type="date" class="form-control" id="fechaVigencia" required>
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" id="esAvisoPrincipal">
+                                        <label class="form-check-label" for="esAvisoPrincipal">Es aviso principal</label>
+                                    </div>
                                 </div>
                             </div>
                         </div>
