@@ -1,12 +1,64 @@
 // Dashboard Coordinador
-import { supabase, mostrarError, mostrarExito } from './auth.js';
+import { supabase } from '../auth.js';
 
 const VERSION = '1.0.0';
 
+// Configuración de tablas
+const TABLAS = {
+    asistencias: {
+        nombre: 'asistencias',
+        campos: ['id', 'alumno_id', 'fecha', 'estado', 'observacion', 'created_at', 'updated_at']
+    },
+    publicaciones: {
+        nombre: 'publicaciones',
+        campos: ['id', 'titulo', 'contenido', 'tipo', 'fecha_publicacion', 'fecha_vigencia', 'estado', 'created_by', 'updated_at']
+    },
+    horario_escolar: {
+        nombre: 'horario_escolar',
+        campos: ['id', 'curso_id', 'dia_semana', 'hora_inicio', 'hora_fin', 'asignatura_id', 'docente_id', 'aula']
+    },
+    calendario_escolar: {
+        nombre: 'calendario_escolar',
+        campos: ['id', 'titulo', 'descripcion', 'fecha_inicio', 'fecha_fin', 'tipo_evento', 'estado']
+    },
+    calificaciones: {
+        nombre: 'calificaciones',
+        campos: ['id', 'alumno_id', 'asignatura_id', 'evaluacion_id', 'nota', 'fecha', 'observacion']
+    }
+};
+
+// Configuración de tablas y campos
+const TABLAS = {
+    asistencias: {
+        nombre: 'asistencias',
+        campos: ['id', 'alumno_id', 'fecha', 'estado', 'observacion', 'created_at', 'updated_at']
+    },
+    publicaciones: {
+        nombre: 'publicaciones',
+        campos: ['id', 'titulo', 'contenido', 'tipo', 'fecha_publicacion', 'fecha_vigencia', 'estado', 'created_by', 'updated_at']
+    },
+    horario_escolar: {
+        nombre: 'horario_escolar',
+        campos: ['id', 'curso_id', 'dia_semana', 'hora_inicio', 'hora_fin', 'asignatura_id', 'docente_id', 'aula']
+    },
+    calendario_escolar: {
+        nombre: 'calendario_escolar',
+        campos: ['id', 'titulo', 'descripcion', 'fecha_inicio', 'fecha_fin', 'tipo_evento', 'estado']
+    },
+    calificaciones: {
+        nombre: 'calificaciones',
+        campos: ['id', 'alumno_id', 'asignatura_id', 'evaluacion_id', 'nota', 'fecha', 'observacion']
+    }
+};
+
 // Configuración
 const CONFIG = {
-    permisosEdicion: ['calendario', 'avisos', 'horarios'],
-    permisosSoloLectura: ['calificaciones', 'asistencias']
+    permisosEdicion: ['calendario', 'avisos', 'horarios', 'calificaciones', 'asistencias'],
+    permisosSoloLectura: [],
+    tiposPublicacion: ['aviso', 'noticia', 'circular'],
+    estadosAsistencia: ['presente', 'ausente', 'justificado', 'atraso'],
+    diasSemana: ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes'],
+    tiposEvento: ['clase', 'reunion', 'evaluacion', 'actividad', 'feriado']
 };
 
 // Inicialización cuando el DOM está listo
@@ -143,31 +195,342 @@ async function cargarHorarios(container, puedeEditar) {
 }
 
 async function cargarCalificaciones(container, puedeEditar) {
-    // TODO: Implementar carga de calificaciones
-    container.innerHTML = `
-        <div class="card">
-            <div class="card-header">
-                <h5 class="mb-0">Calificaciones</h5>
+    try {
+        // Preparar la interfaz
+        container.innerHTML = `
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Control de Calificaciones</h5>
+                    <div class="btn-group">
+                        <button class="btn btn-primary btn-sm" id="btnNuevaCalificacion">
+                            <i class="bi bi-plus-circle"></i> Nueva Calificación
+                        </button>
+                        <button class="btn btn-success btn-sm" id="btnReporteCalificaciones">
+                            <i class="bi bi-file-earmark-excel"></i> Reporte
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <!-- Filtros -->
+                    <div class="row mb-4">
+                        <div class="col-md-3">
+                            <select class="form-select" id="filtroCurso">
+                                <option value="">Todos los cursos</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <select class="form-select" id="filtroAsignatura">
+                                <option value="">Todas las asignaturas</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <select class="form-select" id="filtroEvaluacion">
+                                <option value="">Todas las evaluaciones</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <button class="btn btn-outline-primary w-100" id="btnFiltrar">
+                                <i class="bi bi-funnel"></i> Filtrar
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Estadísticas -->
+                    <div class="row mb-4">
+                        <div class="col-md-4">
+                            <div class="card bg-primary text-white">
+                                <div class="card-body">
+                                    <h6>Promedio General</h6>
+                                    <h2 id="promedioGeneral">---</h2>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-8">
+                            <canvas id="graficoCalificaciones"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Tabla de calificaciones -->
+                    <div class="table-responsive">
+                        <table class="table table-striped" id="tablaCalificaciones">
+                            <thead>
+                                <tr>
+                                    <th>Fecha</th>
+                                    <th>Alumno</th>
+                                    <th>Asignatura</th>
+                                    <th>Evaluación</th>
+                                    <th>Nota</th>
+                                    <th>Observación</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
-            <div class="card-body">
-                <p>Vista de calificaciones aquí</p>
-            </div>
-        </div>
-    `;
+        `;
+
+        // Cargar datos iniciales
+        const [cursos, asignaturas, evaluaciones, calificaciones] = await Promise.all([
+            supabase.from('cursos').select('*').order('nombre'),
+            supabase.from('asignaturas').select('*').order('nombre'),
+            supabase.from('evaluaciones').select('*').order('fecha'),
+            supabase.from('calificaciones').select(`
+                *,
+                alumno:alumno_id(nombre, apellido, curso_id),
+                asignatura:asignatura_id(nombre),
+                evaluacion:evaluacion_id(nombre)
+            `).order('fecha', { ascending: false })
+        ]);
+
+        // Llenar selectores de filtro
+        llenarSelect('filtroCurso', cursos.data, 'nombre');
+        llenarSelect('filtroAsignatura', asignaturas.data, 'nombre');
+        llenarSelect('filtroEvaluacion', evaluaciones.data, 'nombre');
+
+        // Configurar DataTable
+        const tabla = new DataTable('#tablaCalificaciones', {
+            data: calificaciones.data.map(c => ({
+                fecha: formatearFecha(c.fecha),
+                alumno: `${c.alumno.apellido}, ${c.alumno.nombre}`,
+                asignatura: c.asignatura.nombre,
+                evaluacion: c.evaluacion.nombre,
+                nota: formatearCalificacion(c.nota),
+                observacion: c.observacion || '',
+                acciones: `
+                    <button class="btn btn-sm btn-outline-primary btn-editar" data-id="${c.id}">
+                        <i class="bi bi-pencil"></i>
+                    </button>
+                    <button class="btn btn-sm btn-outline-danger btn-eliminar" data-id="${c.id}">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                `
+            })),
+            columns: [
+                { data: 'fecha' },
+                { data: 'alumno' },
+                { data: 'asignatura' },
+                { data: 'evaluacion' },
+                { data: 'nota' },
+                { data: 'observacion' },
+                { data: 'acciones' }
+            ],
+            order: [[0, 'desc']],
+            language: {
+                url: 'https://cdn.datatables.net/plug-ins/1.10.25/i18n/Spanish.json'
+            },
+            responsive: true,
+            dom: 'Bfrtip',
+            buttons: [
+                'copy', 'csv', 'excel', 'pdf', 'print'
+            ]
+        });
+
+        // Calcular y mostrar estadísticas
+        const notas = calificaciones.data.map(c => c.nota);
+        const promedio = notas.reduce((a, b) => a + b, 0) / notas.length;
+        document.getElementById('promedioGeneral').textContent = promedio.toFixed(1);
+
+        // Crear gráfico de distribución de notas
+        const distribucion = {
+            '1.0-2.9': notas.filter(n => n >= 1.0 && n < 3.0).length,
+            '3.0-3.9': notas.filter(n => n >= 3.0 && n < 4.0).length,
+            '4.0-4.9': notas.filter(n => n >= 4.0 && n < 5.0).length,
+            '5.0-5.9': notas.filter(n => n >= 5.0 && n < 6.0).length,
+            '6.0-7.0': notas.filter(n => n >= 6.0 && n <= 7.0).length
+        };
+
+        new Chart(document.getElementById('graficoCalificaciones'), {
+            type: 'bar',
+            data: {
+                labels: Object.keys(distribucion),
+                datasets: [{
+                    label: 'Distribución de Notas',
+                    data: Object.values(distribucion),
+                    backgroundColor: [
+                        '#dc3545', // Rojo
+                        '#ffc107', // Amarillo
+                        '#17a2b8', // Cyan
+                        '#28a745', // Verde
+                        '#007bff'  // Azul
+                    ]
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            stepSize: 1
+                        }
+                    }
+                }
+            }
+        });
+
+        // Configurar eventos
+        document.getElementById('btnNuevaCalificacion').addEventListener('click', () => mostrarModalCalificacion());
+        document.getElementById('btnReporteCalificaciones').addEventListener('click', generarReporteCalificaciones);
+        document.getElementById('btnFiltrar').addEventListener('click', () => filtrarCalificaciones(tabla));
+        
+        tabla.on('click', '.btn-editar', function() {
+            const id = this.dataset.id;
+            editarCalificacion(id);
+        });
+        
+        tabla.on('click', '.btn-eliminar', function() {
+            const id = this.dataset.id;
+            eliminarCalificacion(id);
+        });
+
+    } catch (error) {
+        console.error('Error al cargar calificaciones:', error);
+        mostrarError('Error al cargar las calificaciones');
+    }
 }
 
 async function cargarAsistencias(container, puedeEditar) {
-    // TODO: Implementar carga de asistencias
-    container.innerHTML = `
-        <div class="card">
-            <div class="card-header">
-                <h5 class="mb-0">Asistencias</h5>
+    try {
+        // Preparar la interfaz
+        container.innerHTML = `
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Control de Asistencias</h5>
+                    <button class="btn btn-primary btn-sm" id="btnNuevaAsistencia">
+                        <i class="bi bi-plus-circle"></i> Nueva Asistencia
+                    </button>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-4">
+                        <div class="col-md-4">
+                            <div class="card bg-primary text-white">
+                                <div class="card-body">
+                                    <h6>Asistencia General</h6>
+                                    <h2 id="porcentajeAsistencia">---%</h2>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-8">
+                            <canvas id="graficoAsistencia"></canvas>
+                        </div>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-striped" id="tablaAsistencias">
+                            <thead>
+                                <tr>
+                                    <th>Fecha</th>
+                                    <th>Alumno</th>
+                                    <th>Estado</th>
+                                    <th>Observación</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
-            <div class="card-body">
-                <p>Registro de asistencias aquí</p>
-            </div>
-        </div>
-    `;
+        `;
+
+        // Obtener datos
+        const { data: asistencias } = await supabase
+            .from('asistencias')
+            .select(`
+                *,
+                alumno:alumno_id(nombre, apellido)
+            `)
+            .order('fecha', { ascending: false });
+
+        // Configurar DataTable
+        const tabla = new DataTable('#tablaAsistencias', {
+            data: asistencias.map(a => ({
+                fecha: a.fecha,
+                alumno: `${a.alumno.nombre} ${a.alumno.apellido}`,
+                estado: formatearEstadoAsistencia(a.estado),
+                observacion: a.observacion || '',
+                acciones: `
+                    <button class="btn btn-sm btn-outline-primary btn-editar" data-id="${a.id}">
+                        <i class="bi bi-pencil"></i>
+                    </button>
+                    <button class="btn btn-sm btn-outline-danger btn-eliminar" data-id="${a.id}">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                `
+            })),
+            columns: [
+                { data: 'fecha' },
+                { data: 'alumno' },
+                { data: 'estado' },
+                { data: 'observacion' },
+                { data: 'acciones' }
+            ],
+            language: {
+                url: 'https://cdn.datatables.net/plug-ins/1.10.25/i18n/Spanish.json'
+            },
+            responsive: true
+        });
+
+        // Calcular estadísticas
+        const total = asistencias.length;
+        const presentes = asistencias.filter(a => a.estado === 'presente').length;
+        const porcentaje = Math.round((presentes / total) * 100);
+
+        // Actualizar indicador
+        document.getElementById('porcentajeAsistencia').textContent = `${porcentaje}%`;
+
+        // Crear gráfico
+        const stats = {
+            presente: asistencias.filter(a => a.estado === 'presente').length,
+            ausente: asistencias.filter(a => a.estado === 'ausente').length,
+            justificado: asistencias.filter(a => a.estado === 'justificado').length,
+            atraso: asistencias.filter(a => a.estado === 'atraso').length
+        };
+
+        new Chart(document.getElementById('graficoAsistencia'), {
+            type: 'bar',
+            data: {
+                labels: Object.keys(stats),
+                datasets: [{
+                    label: 'Asistencias por Estado',
+                    data: Object.values(stats),
+                    backgroundColor: [
+                        '#28a745',
+                        '#dc3545',
+                        '#ffc107',
+                        '#17a2b8'
+                    ]
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            stepSize: 1
+                        }
+                    }
+                }
+            }
+        });
+
+        // Eventos
+        document.getElementById('btnNuevaAsistencia').addEventListener('click', mostrarModalAsistencia);
+        tabla.on('click', '.btn-editar', function() {
+            const id = this.dataset.id;
+            editarAsistencia(id);
+        });
+        tabla.on('click', '.btn-eliminar', function() {
+            const id = this.dataset.id;
+            eliminarAsistencia(id);
+        });
+
+    } catch (error) {
+        console.error('Error al cargar asistencias:', error);
+        mostrarError('Error al cargar las asistencias');
+    }
 }
 
 // Función para cerrar sesión

@@ -6,6 +6,11 @@
     <title>Dashboard Coordinador - Colegio Carmen de Peña</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/@fullcalendar/core/main.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/@fullcalendar/daygrid/main.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/datatables.net-bs5/css/dataTables.bootstrap5.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/datatables.net-responsive-bs5/css/responsive.bootstrap5.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/sweetalert2/dist/sweetalert2.min.css" rel="stylesheet">
     <link href="../css/admin-styles.css" rel="stylesheet">
 </head>
 <body>
@@ -60,7 +65,296 @@
         </div>
     </div>
 
+    <!-- Scripts principales -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-    <script type="module" src="../js/admin/dashboard-coordinador.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/datatables.net/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/datatables.net-bs5/js/dataTables.bootstrap5.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/datatables.net-responsive/js/dataTables.responsive.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/datatables.net-responsive-bs5/js/responsive.bootstrap5.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@fullcalendar/core/main.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@fullcalendar/daygrid/main.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@fullcalendar/interaction/main.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2/dist/sweetalert2.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/moment/min/moment.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Script principal del dashboard -->
+    <script type="module" src="../js/admin/dashboard-coordinador.js?v=1.0.12"></script>
+
+    <!-- Modales -->
+    <!-- Modal de Publicación -->
+    <div class="modal fade" id="modalPublicacion" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Nueva Publicación</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="formPublicacion">
+                        <input type="hidden" id="publicacionId">
+                        <div class="mb-3">
+                            <label for="titulo" class="form-label">Título</label>
+                            <input type="text" class="form-control" id="titulo" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="tipo" class="form-label">Tipo</label>
+                            <select class="form-select" id="tipo" required>
+                                <option value="">Seleccione tipo...</option>
+                                <option value="aviso">Aviso</option>
+                                <option value="noticia">Noticia</option>
+                                <option value="circular">Circular</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="contenido" class="form-label">Contenido</label>
+                            <textarea class="form-control" id="contenido" rows="4" required></textarea>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="fechaPublicacion" class="form-label">Fecha de Publicación</label>
+                                    <input type="date" class="form-control" id="fechaPublicacion" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="fechaVigencia" class="form-label">Fecha de Vigencia</label>
+                                    <input type="date" class="form-control" id="fechaVigencia" required>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" id="btnGuardarPublicacion">Guardar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Evento de Calendario -->
+    <div class="modal fade" id="modalEvento" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Nuevo Evento</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="formEvento">
+                        <input type="hidden" id="eventoId">
+                        <div class="mb-3">
+                            <label for="eventoTitulo" class="form-label">Título</label>
+                            <input type="text" class="form-control" id="eventoTitulo" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="tipoEvento" class="form-label">Tipo</label>
+                            <select class="form-select" id="tipoEvento" required>
+                                <option value="">Seleccione tipo...</option>
+                                <option value="clase">Clase</option>
+                                <option value="reunion">Reunión</option>
+                                <option value="evaluacion">Evaluación</option>
+                                <option value="actividad">Actividad</option>
+                                <option value="feriado">Feriado</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="eventoDescripcion" class="form-label">Descripción</label>
+                            <textarea class="form-control" id="eventoDescripcion" rows="3"></textarea>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="eventoInicio" class="form-label">Fecha Inicio</label>
+                                    <input type="datetime-local" class="form-control" id="eventoInicio" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="eventoFin" class="form-label">Fecha Fin</label>
+                                    <input type="datetime-local" class="form-control" id="eventoFin" required>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-danger" id="btnEliminarEvento">Eliminar</button>
+                    <button type="button" class="btn btn-primary" id="btnGuardarEvento">Guardar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Horario -->
+    <div class="modal fade" id="modalHorario" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Nuevo Horario</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="formHorario">
+                        <input type="hidden" id="horarioId">
+                        <div class="mb-3">
+                            <label for="curso" class="form-label">Curso</label>
+                            <select class="form-select" id="curso" required>
+                                <option value="">Seleccione curso...</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="diaSemana" class="form-label">Día</label>
+                            <select class="form-select" id="diaSemana" required>
+                                <option value="">Seleccione día...</option>
+                                <option value="1">Lunes</option>
+                                <option value="2">Martes</option>
+                                <option value="3">Miércoles</option>
+                                <option value="4">Jueves</option>
+                                <option value="5">Viernes</option>
+                            </select>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="horaInicio" class="form-label">Hora Inicio</label>
+                                    <input type="time" class="form-control" id="horaInicio" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="horaFin" class="form-label">Hora Fin</label>
+                                    <input type="time" class="form-control" id="horaFin" required>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="asignatura" class="form-label">Asignatura</label>
+                            <select class="form-select" id="asignatura" required>
+                                <option value="">Seleccione asignatura...</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="docente" class="form-label">Docente</label>
+                            <select class="form-select" id="docente" required>
+                                <option value="">Seleccione docente...</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="aula" class="form-label">Aula</label>
+                            <input type="text" class="form-control" id="aula" required>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-danger" id="btnEliminarHorario">Eliminar</button>
+                    <button type="button" class="btn btn-primary" id="btnGuardarHorario">Guardar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Calificación -->
+    <div class="modal fade" id="modalCalificacion" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Nueva Calificación</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="formCalificacion">
+                        <input type="hidden" id="calificacionId">
+                        <div class="mb-3">
+                            <label for="alumnoCalificacion" class="form-label">Alumno</label>
+                            <select class="form-select" id="alumnoCalificacion" required>
+                                <option value="">Seleccione alumno...</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="asignaturaCalificacion" class="form-label">Asignatura</label>
+                            <select class="form-select" id="asignaturaCalificacion" required>
+                                <option value="">Seleccione asignatura...</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="evaluacion" class="form-label">Evaluación</label>
+                            <select class="form-select" id="evaluacion" required>
+                                <option value="">Seleccione evaluación...</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="nota" class="form-label">Nota</label>
+                            <input type="number" class="form-control" id="nota" min="1" max="7" step="0.1" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="fechaCalificacion" class="form-label">Fecha</label>
+                            <input type="date" class="form-control" id="fechaCalificacion" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="observacionCalificacion" class="form-label">Observación</label>
+                            <textarea class="form-control" id="observacionCalificacion" rows="2"></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-danger" id="btnEliminarCalificacion">Eliminar</button>
+                    <button type="button" class="btn btn-primary" id="btnGuardarCalificacion">Guardar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Asistencia -->
+    <div class="modal fade" id="modalAsistencia" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Registro de Asistencia</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="formAsistencia">
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="cursoAsistencia" class="form-label">Curso</label>
+                                <select class="form-select" id="cursoAsistencia" required>
+                                    <option value="">Seleccione curso...</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="fechaAsistencia" class="form-label">Fecha</label>
+                                <input type="date" class="form-control" id="fechaAsistencia" required>
+                            </div>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-hover" id="tablaAsistencia">
+                                <thead>
+                                    <tr>
+                                        <th>Alumno</th>
+                                        <th>Estado</th>
+                                        <th>Observación</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <!-- Se llenará dinámicamente -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" id="btnGuardarAsistencia">Guardar</button>
+                </div>
+            </div>
+        </div>
+    </div>
 </body>
 </html>
