@@ -1,31 +1,10 @@
 // Dashboard Coordinador
-import { supabase } from '../auth.js';
+const VERSION = '1.0.13';
 
-const VERSION = '1.0.0';
-
-// Configuración de tablas
-const TABLAS = {
-    asistencias: {
-        nombre: 'asistencias',
-        campos: ['id', 'alumno_id', 'fecha', 'estado', 'observacion', 'created_at', 'updated_at']
-    },
-    publicaciones: {
-        nombre: 'publicaciones',
-        campos: ['id', 'titulo', 'contenido', 'tipo', 'fecha_publicacion', 'fecha_vigencia', 'estado', 'created_by', 'updated_at']
-    },
-    horario_escolar: {
-        nombre: 'horario_escolar',
-        campos: ['id', 'curso_id', 'dia_semana', 'hora_inicio', 'hora_fin', 'asignatura_id', 'docente_id', 'aula']
-    },
-    calendario_escolar: {
-        nombre: 'calendario_escolar',
-        campos: ['id', 'titulo', 'descripcion', 'fecha_inicio', 'fecha_fin', 'tipo_evento', 'estado']
-    },
-    calificaciones: {
-        nombre: 'calificaciones',
-        campos: ['id', 'alumno_id', 'asignatura_id', 'evaluacion_id', 'nota', 'fecha', 'observacion']
-    }
-};
+// Inicializar Supabase
+const SUPABASE_URL = 'https://yjrrtufenyfuhdycueyo.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlqcnJ0dWZlbnlmdWhkeWN1ZXlvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTkzMjA3NzEsImV4cCI6MjA3NDg5Njc3MX0.OiyO2QKj7nTYAS8-9QSMNqqjvV_1ZWX_KBJYZLmk5s4';
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 // Configuración de tablas y campos
 const TABLAS = {
