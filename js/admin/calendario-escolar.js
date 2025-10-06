@@ -9,15 +9,21 @@ console.log('[Calendario Escolar] Imports completados');
 export async function obtenerEventos() {
     console.log('[Calendario Escolar] Obteniendo eventos desde Supabase...');
     try {
+        console.log('[Calendario Escolar] Realizando consulta a la tabla calendario_escolar...');
+        const session = await supabase.auth.getSession();
+        console.log('[Calendario Escolar] Sesión actual:', session);
         const { data, error } = await supabase
             .from('calendario_escolar')
-            .select('*')
-            .order('fecha', { ascending: true });
+            .select('id, titulo, descripcion, fecha_inicio, fecha_fin, tipo_evento, estado')
+            .order('fecha_inicio', { ascending: true });
+
+        console.log('[Calendario Escolar] Resultado de la consulta:', { data, error });
 
         if (error) throw error;
         return data;
     } catch (error) {
-        console.error('Error al obtener eventos:', error.message);
+        console.error('[Calendario Escolar] Error al obtener eventos:', error.message);
+        console.error('[Calendario Escolar] Detalles del error:', error);
         mostrarError('Error al obtener los eventos');
         return [];
     }
@@ -29,9 +35,12 @@ export async function crearEvento(evento) {
         const { data, error } = await supabase
             .from('calendario_escolar')
             .insert([{
+                titulo: evento.titulo,
+                fecha_inicio: evento.fecha_inicio,
+                fecha_fin: evento.fecha_fin,
                 descripcion: evento.descripcion,
-                fecha: evento.fecha,
-                tipo_evento: evento.tipo_evento
+                tipo_evento: evento.tipo_evento,
+                estado: 'activo'
             }])
             .select();
 
@@ -51,9 +60,12 @@ export async function actualizarEvento(id, evento) {
         const { data, error } = await supabase
             .from('calendario_escolar')
             .update({
+                titulo: evento.titulo,
+                fecha_inicio: evento.fecha_inicio,
+                fecha_fin: evento.fecha_fin,
                 descripcion: evento.descripcion,
-                fecha: evento.fecha,
-                tipo_evento: evento.tipo_evento
+                tipo_evento: evento.tipo_evento,
+                estado: evento.estado || 'activo'
             })
             .eq('id', id)
             .select();
@@ -89,12 +101,20 @@ export async function eliminarEvento(id) {
 export function validarEvento(evento) {
     const errores = [];
 
-    if (!evento.descripcion?.trim()) {
-        errores.push('La descripción es requerida');
+    if (!evento.titulo?.trim()) {
+        errores.push('El título es requerido');
     }
 
-    if (!evento.fecha) {
-        errores.push('La fecha es requerida');
+    if (!evento.fecha_inicio) {
+        errores.push('La fecha de inicio es requerida');
+    }
+
+    if (!evento.fecha_fin) {
+        errores.push('La fecha de fin es requerida');
+    }
+
+    if (evento.fecha_inicio && evento.fecha_fin && new Date(evento.fecha_inicio) > new Date(evento.fecha_fin)) {
+        errores.push('La fecha de fin debe ser posterior a la fecha de inicio');
     }
 
     if (!evento.tipo_evento) {

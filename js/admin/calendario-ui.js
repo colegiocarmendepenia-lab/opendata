@@ -41,9 +41,9 @@ export async function cargarEventosCalendario(container) {
         // Formatear eventos para el calendario
         const eventosCalendario = eventos.map(evento => ({
             id: evento.id,
-            title: evento.descripcion,
-            start: evento.fecha,
-            end: evento.fecha,
+            title: evento.titulo,
+            start: evento.fecha_inicio,
+            end: evento.fecha_fin || evento.fecha_inicio,
             allDay: true,
             className: obtenerClaseEvento(evento.tipo_evento),
             extendedProps: {
@@ -99,9 +99,11 @@ export async function cargarEventosCalendario(container) {
             eventDrop: async function(info) {
                 try {
                     await actualizarEvento(info.event.id, {
-                        descripcion: info.event.title,
-                        fecha: info.event.start,
-                        tipo_evento: info.event.extendedProps.tipo
+                        titulo: info.event.title,
+                        fecha_inicio: info.event.start,
+                        fecha_fin: info.event.end || info.event.start,
+                        tipo_evento: info.event.extendedProps.tipo,
+                        estado: 'activo'
                     });
                 } catch (error) {
                     info.revert();
@@ -136,9 +138,11 @@ function mostrarModalEvento(datos) {
     
     // Llenar formulario
     form.eventoId.value = datos.id || '';
-    form.eventoTitulo.value = datos.descripcion || '';
+    form.eventoTitulo.value = datos.titulo || datos.title || '';
+    form.eventoDescripcion.value = datos.descripcion || '';
     form.tipoEvento.value = datos.tipo_evento || 'actividad';
-    form.eventoFecha.value = formatearFecha(datos.fecha, false);
+    form.eventoInicio.value = formatearFecha(datos.fecha_inicio || datos.start, true);
+    form.eventoFin.value = formatearFecha(datos.fecha_fin || datos.end || datos.fecha_inicio || datos.start, true);
     
     // Mostrar/ocultar botón eliminar
     document.getElementById('btnEliminarEvento').style.display = 
@@ -164,9 +168,12 @@ async function guardarEvento() {
     try {
         const form = document.getElementById('formEvento');
         const evento = {
-            descripcion: form.eventoTitulo.value.trim(),
-            fecha: form.eventoFecha.value,
-            tipo_evento: form.tipoEvento.value
+            titulo: form.eventoTitulo.value.trim(),
+            descripcion: form.eventoDescripcion.value.trim(),
+            fecha_inicio: form.eventoInicio.value,
+            fecha_fin: form.eventoFin.value,
+            tipo_evento: form.tipoEvento.value,
+            estado: 'activo'
         };
 
         // Validar evento
