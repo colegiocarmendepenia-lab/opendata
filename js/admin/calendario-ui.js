@@ -59,13 +59,16 @@ export async function cargarEventosCalendario(container) {
             throw new Error('Elemento del calendario no encontrado');
         }
         console.log('[Calendario UI] Elemento del calendario encontrado:', calendarEl);
-        calendario = new window.FullCalendar.Calendar(calendarEl, {
-            plugins: [
-                window.FullCalendarDayGrid,
-                window.FullCalendarTimeGrid,
-                window.FullCalendarInteraction
-            ],
+        calendario = new FullCalendar.Calendar(calendarEl, {
             initialView: 'dayGridMonth',
+            locale: 'es',
+            themeSystem: 'bootstrap5',
+            height: 'auto',
+            headerToolbar: {
+                left: 'prev,next today',
+                center: 'title',
+                right: 'dayGridMonth,timeGridWeek,timeGridDay'
+            },
             initialView: 'dayGridMonth',
             locale: 'es',
             headerToolbar: {
