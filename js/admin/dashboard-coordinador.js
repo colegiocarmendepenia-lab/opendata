@@ -1,4 +1,5 @@
 // Dashboard Coordinador
+import { TABLAS } from '../config.js';
 const VERSION = '1.0.13';
 
 // Inicializar Supabase
