@@ -2,7 +2,7 @@
 console.log('[Publicaciones UI] Iniciando módulo...');
 
 import { obtenerPublicaciones, crearPublicacion, actualizarPublicacion, eliminarPublicacion, validarPublicacion } from './publicaciones.js';
-import { mostrarError } from '../auth.js';
+import { supabase, mostrarError } from '../auth.js';
 
 console.log('[Publicaciones UI] Imports completados');
 
@@ -123,11 +123,24 @@ function mostrarModalPublicacion(datos) {
     document.getElementById('btnEliminarPublicacion').style.display = 
         datos.modo === 'editar' ? 'block' : 'none';
 
-    // Configurar evento de guardar
-    form.onsubmit = async (e) => {
+    // Configurar eventos
+    document.getElementById('btnGuardarPublicacion').onclick = async (e) => {
         e.preventDefault();
+        if (!form.checkValidity()) {
+            form.classList.add('was-validated');
+            return;
+        }
         await guardarPublicacion(form);
     };
+
+    document.getElementById('btnEliminarPublicacion').onclick = () => {
+        if (datos.id) {
+            confirmarEliminarPublicacion(datos.id);
+        }
+    };
+
+    // Resetear validación
+    form.classList.remove('was-validated');
 
     // Mostrar modal
     modal.show();
@@ -136,11 +149,18 @@ function mostrarModalPublicacion(datos) {
 // Función para guardar publicación
 async function guardarPublicacion(form) {
     try {
+        // Obtener el usuario actual
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) {
+            throw new Error('Debe iniciar sesión para crear una publicación');
+        }
+
         const publicacion = {
             titulo: form.titulo.value.trim(),
             contenido: form.contenido.value.trim(),
             fecha_publicacion: form.fechaPublicacion.value,
-            es_aviso_principal: form.esAvisoPrincipal.checked
+            es_aviso_principal: form.esAvisoPrincipal.checked,
+            autor_id: session.user.id
         };
 
         // Validar publicación
