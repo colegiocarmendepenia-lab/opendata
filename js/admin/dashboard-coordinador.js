@@ -1,4 +1,6 @@
 // Dashboard Coordinador
+import { cargarEventosCalendario } from './calendario-ui.js';
+
 const VERSION = '1.0.13';
 
 // Inicializar Supabase
@@ -128,8 +130,6 @@ async function cargarSeccion(seccion) {
 }
 
 // Funciones para cargar cada sección
-import { cargarEventosCalendario } from './calendario-ui.js';
-}
 
 async function cargarAvisos(container, puedeEditar) {
     // TODO: Implementar carga de avisos
