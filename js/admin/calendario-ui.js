@@ -1,4 +1,10 @@
-// Módulo para la interfaz de usuario del calendario
+// Módulo para la interfaz de usuario del         const calendarEl = document.getElementById('calendario');
+        calendario = new FullCalendar.Calendar(calendarEl, {
+            plugins: [ 
+                'dayGrid',
+                'timeGrid',
+                'interaction'
+            ],rio
 import { obtenerEventos, crearEvento, actualizarEvento, eliminarEvento, validarEvento } from './calendario-escolar.js';
 import { mostrarError, mostrarExito } from './auth.js';
 
