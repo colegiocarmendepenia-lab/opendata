@@ -113,31 +113,40 @@
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">Nueva Publicación</h5>
+                    <h5 class="modal-title" id="modalPublicacionLabel">Nueva Publicación</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
-                    <form id="formPublicacion">
-                        <input type="hidden" id="publicacionId">
+                    <form id="formPublicacion" class="needs-validation" novalidate>
+                        <input type="hidden" name="publicacionId" id="publicacionId">
                         <div class="mb-3">
                             <label for="titulo" class="form-label">Título</label>
-                            <input type="text" class="form-control" id="titulo" required>
+                            <input type="text" class="form-control" name="titulo" id="titulo" required>
+                            <div class="invalid-feedback">
+                                El título es requerido
+                            </div>
                         </div>
                         <div class="mb-3">
                             <label for="contenido" class="form-label">Contenido</label>
-                            <textarea class="form-control" id="contenido" rows="4" required></textarea>
+                            <textarea class="form-control" name="contenido" id="contenido" rows="4" required></textarea>
+                            <div class="invalid-feedback">
+                                El contenido es requerido
+                            </div>
                         </div>
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label for="fechaPublicacion" class="form-label">Fecha de Publicación</label>
-                                    <input type="date" class="form-control" id="fechaPublicacion" required>
+                                    <input type="date" class="form-control" name="fechaPublicacion" id="fechaPublicacion" required>
+                                    <div class="invalid-feedback">
+                                        La fecha de publicación es requerida
+                                    </div>
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="mb-3">
-                                    <div class="form-check form-switch">
-                                        <input class="form-check-input" type="checkbox" id="esAvisoPrincipal">
+                                    <div class="form-check form-switch mt-4">
+                                        <input class="form-check-input" type="checkbox" name="esAvisoPrincipal" id="esAvisoPrincipal">
                                         <label class="form-check-label" for="esAvisoPrincipal">Es aviso principal</label>
                                     </div>
                                 </div>
@@ -147,7 +156,8 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="button" class="btn btn-primary" id="btnGuardarPublicacion">Guardar</button>
+                    <button type="button" class="btn btn-danger" id="btnEliminarPublicacion" style="display: none;">Eliminar</button>
+                    <button type="submit" class="btn btn-primary" id="btnGuardarPublicacion">Guardar</button>
                 </div>
             </div>
         </div>
