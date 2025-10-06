@@ -1,8 +1,13 @@
 // Módulo para gestionar el calendario escolar
-import { supabase, mostrarError, mostrarExito } from './auth.js';
+console.log('[Calendario Escolar] Iniciando módulo...');
+
+import { supabase, mostrarError, mostrarExito } from '../auth.js';
+
+console.log('[Calendario Escolar] Imports completados');
 
 // Función para obtener todos los eventos del calendario
 export async function obtenerEventos() {
+    console.log('[Calendario Escolar] Obteniendo eventos desde Supabase...');
     try {
         const { data, error } = await supabase
             .from('calendario_escolar')

@@ -1,13 +1,23 @@
 // Módulo para la interfaz de usuario del calendario
+console.log('[Calendario UI] Iniciando módulo...');
+
 import { obtenerEventos, crearEvento, actualizarEvento, eliminarEvento, validarEvento } from './calendario-escolar.js';
 import { mostrarError, mostrarExito } from '../auth.js';
+
+console.log('[Calendario UI] Imports completados');
 
 // Variable global para el calendario
 let calendario = null;
 
 // Función para cargar eventos en el calendario
 export async function cargarEventosCalendario(container) {
+    console.log('[Calendario UI] Iniciando carga de calendario...');
     try {
+        console.log('[Calendario UI] Verificando dependencias:', {
+            FullCalendar: window.FullCalendar ? 'Cargado' : 'No cargado',
+            jQuery: window.jQuery ? 'Cargado' : 'No cargado',
+            bootstrap: window.bootstrap ? 'Cargado' : 'No cargado'
+        });
         // Preparar la interfaz
         container.innerHTML = `
             <div class="card">
@@ -24,7 +34,9 @@ export async function cargarEventosCalendario(container) {
         `;
 
         // Cargar eventos
+        console.log('[Calendario UI] Obteniendo eventos...');
         const eventos = await obtenerEventos();
+        console.log('[Calendario UI] Eventos obtenidos:', eventos);
 
         // Formatear eventos para el calendario
         const eventosCalendario = eventos.map(evento => ({
@@ -40,7 +52,13 @@ export async function cargarEventosCalendario(container) {
         }));
 
         // Inicializar calendario
+        console.log('[Calendario UI] Preparando inicialización del calendario...');
         const calendarEl = document.getElementById('calendario');
+        if (!calendarEl) {
+            console.error('[Calendario UI] Elemento del calendario no encontrado');
+            throw new Error('Elemento del calendario no encontrado');
+        }
+        console.log('[Calendario UI] Elemento del calendario encontrado:', calendarEl);
         calendario = new window.FullCalendar.Calendar(calendarEl, {
             plugins: [
                 window.FullCalendarDayGrid,

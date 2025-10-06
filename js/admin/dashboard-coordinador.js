@@ -1,7 +1,7 @@
 // Dashboard Coordinador
 import { cargarEventosCalendario } from './calendario-ui.js';
 
-const VERSION = '1.0.14';
+const VERSION = '1.0.15';
 
 // Inicializar Supabase
 const SUPABASE_URL = 'https://yjrrtufenyfuhdycueyo.supabase.co';

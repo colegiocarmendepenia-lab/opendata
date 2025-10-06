@@ -83,6 +83,20 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.0/dist/umd/supabase.min.js"></script>
     
+    <!-- Script de diagnóstico -->
+    <script>
+        console.log('[Diagnóstico] Iniciando carga de scripts...');
+        window.addEventListener('load', () => {
+            console.log('[Diagnóstico] Estado final de dependencias:', {
+                FullCalendar: typeof FullCalendar !== 'undefined' ? 'Cargado' : 'No cargado',
+                jQuery: typeof jQuery !== 'undefined' ? 'Cargado' : 'No cargado',
+                bootstrap: typeof bootstrap !== 'undefined' ? 'Cargado' : 'No cargado',
+                moment: typeof moment !== 'undefined' ? 'Cargado' : 'No cargado',
+                Chart: typeof Chart !== 'undefined' ? 'Cargado' : 'No cargado'
+            });
+        });
+    </script>
+
     <!-- Scripts de la aplicación -->
     <script src="../js/auth.js" type="module"></script>
     <script src="../js/admin/utils.js" type="module"></script>
@@ -93,7 +107,7 @@
     <script src="../js/admin/asistencias.js" type="module"></script>
     
     <!-- Script principal del dashboard -->
-    <script src="../js/admin/dashboard-coordinador.js?v=1.0.14" type="module"></script>
+    <script src="../js/admin/dashboard-coordinador.js?v=1.0.15" type="module"></script>
 
     <!-- Modales -->
     <!-- Modal de Publicación -->
