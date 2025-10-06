@@ -90,38 +90,40 @@ document.addEventListener('DOMContentLoaded', function() {
             mostrarMensaje('¡Inicio de sesión exitoso! Redirigiendo...', 'success');
             console.log('Usuario autenticado:', data.user);
             
-            // Obtener el perfil_id del usuario
+            // Obtener el rol del usuario
             const { data: userData, error: userError } = await supabase
                 .from('usuarios')
-                .select('perfil_id')
+                .select('rol')
                 .eq('id', data.user.id)
                 .single();
 
             if (userError) throw userError;
 
-            // Redireccionar según el perfil_id usando URLs absolutas desde la raíz
+            console.log('Datos del usuario:', userData);
+
+            // Redireccionar según el rol usando URLs absolutas desde la raíz
             setTimeout(() => {
                 const baseUrl = window.location.origin + window.location.pathname.replace('login.html', '');
-                switch(userData?.perfil_id) {
-                    case 1: // Administrador
+                switch(userData?.rol) {
+                    case 'admin':
                         window.location.href = baseUrl + 'admin/dashboard.html';
                         break;
-                    case 2: // Alumno
+                    case 'estudiante':
                         window.location.href = baseUrl + 'admin/dashboard-alumno.html';
                         break;
-                    case 3: // Docente
+                    case 'docente':
                         window.location.href = baseUrl + 'admin/dashboard-docente.html';
                         break;
-                    case 4: // Padres
+                    case 'padre':
                         window.location.href = baseUrl + 'admin/dashboard-padres.html';
                         break;
-                    case 5: // Coordinador
+                    case 'coordinador':
                         window.location.href = baseUrl + 'admin/dashboard-coordinador.html';
                         break;
                     default:
-                        // Si el perfil_id no está definido o no coincide con ninguno de los anteriores
-                        console.error('Perfil ID no reconocido:', userData?.perfil_id);
-                        mostrarMensaje('Error: Perfil de usuario no válido', 'error');
+                        // Si el rol no está definido o no coincide con ninguno de los anteriores
+                        console.error('Rol no reconocido:', userData?.rol);
+                        mostrarMensaje('Error: Rol de usuario no válido', 'error');
                         supabase.auth.signOut(); // Cerramos la sesión por seguridad
                 }
             }, 1000);
