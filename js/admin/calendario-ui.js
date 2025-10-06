@@ -41,9 +41,13 @@ export async function cargarEventosCalendario(container) {
 
         // Inicializar calendario
         const calendarEl = document.getElementById('calendario');
-        calendario = new FullCalendar.Calendar(calendarEl, {
+        calendario = new window.FullCalendar.Calendar(calendarEl, {
+            plugins: [
+                window.FullCalendarDayGrid,
+                window.FullCalendarTimeGrid,
+                window.FullCalendarInteraction
+            ],
             initialView: 'dayGridMonth',
-            plugins: ['dayGrid', 'timeGrid', 'interaction'],
             initialView: 'dayGridMonth',
             locale: 'es',
             headerToolbar: {
