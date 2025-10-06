@@ -1,5 +1,4 @@
 // Dashboard Coordinador
-import { TABLAS } from '../config.js';
 const VERSION = '1.0.13';
 
 // Inicializar Supabase
@@ -105,7 +104,7 @@ async function cargarSeccion(seccion) {
         // Cargar datos según la sección
         switch (seccion) {
             case 'calendario':
-                await cargarCalendario(mainContent, puedeEditar);
+                await cargarCalendario(mainContent);
                 break;
             case 'avisos':
                 await cargarAvisos(mainContent, puedeEditar);
@@ -129,19 +128,155 @@ async function cargarSeccion(seccion) {
 }
 
 // Funciones para cargar cada sección
-async function cargarCalendario(container, puedeEditar) {
-    // TODO: Implementar carga de calendario
-    container.innerHTML = `
-        <div class="card">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <h5 class="mb-0">Calendario</h5>
-                ${puedeEditar ? '<button class="btn btn-primary btn-sm"><i class="bi bi-plus"></i> Nuevo Evento</button>' : ''}
+async function cargarCalendario(container) {
+    try {
+        // Preparar la interfaz
+        container.innerHTML = `
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Calendario Escolar</h5>
+                    <button class="btn btn-primary btn-sm" id="btnNuevoEvento">
+                        <i class="bi bi-plus"></i> Nuevo Evento
+                    </button>
+                </div>
+                <div class="card-body">
+                    <div id="calendario"></div>
+                </div>
             </div>
-            <div class="card-body">
-                <p>Contenido del calendario aquí</p>
-            </div>
-        </div>
-    `;
+        `;
+
+        // Cargar eventos del calendario
+        const { data: eventos, error } = await supabase
+            .from('calendario_escolar')
+            .select('*')
+            .order('fecha', { ascending: true });
+
+        if (error) throw error;
+
+        // Formatear eventos para el calendario
+        const eventosCalendario = eventos.map(evento => ({
+            id: evento.id,
+            title: evento.descripcion,
+            start: evento.fecha,
+            end: evento.fecha,
+            allDay: true,
+            className: obtenerClaseEvento(evento.tipo_evento)
+        }));
+
+        // Inicializar calendario
+        const calendarEl = document.getElementById('calendario');
+        const calendar = new FullCalendar.Calendar(calendarEl, {
+            initialView: 'dayGridMonth',
+            locale: 'es',
+            headerToolbar: {
+                left: 'prev,next today',
+                center: 'title',
+                right: 'dayGridMonth,timeGridWeek,timeGridDay'
+            },
+            events: eventosCalendario,
+            editable: true,
+            selectable: true,
+            selectMirror: true,
+            dayMaxEvents: true,
+            select: function(info) {
+                mostrarModalEvento({
+                    fecha: info.start,
+                    modo: 'crear'
+                });
+            },
+            eventClick: function(info) {
+                mostrarModalEvento({
+                    id: info.event.id,
+                    descripcion: info.event.title,
+                    fecha: info.event.start,
+                    tipo_evento: obtenerTipoEvento(info.event.classNames),
+                    modo: 'editar'
+                });
+            },
+            eventDrop: async function(info) {
+                try {
+                    const { error } = await supabase
+                        .from('calendario_escolar')
+                        .update({
+                            fecha: info.event.start
+                        })
+                        .eq('id', info.event.id);
+
+                    if (error) throw error;
+                    mostrarMensaje('Evento actualizado correctamente', 'success');
+                } catch (error) {
+                    console.error('Error al actualizar evento:', error);
+                    mostrarMensaje('Error al actualizar el evento', 'error');
+                    info.revert();
+                }
+            }
+        });
+
+        calendar.render();
+
+        // Evento para nuevo evento
+        document.getElementById('btnNuevoEvento').addEventListener('click', () => {
+            mostrarModalEvento({
+                fecha: new Date(),
+                modo: 'crear'
+            });
+        });
+
+    } catch (error) {
+        console.error('Error al cargar calendario:', error);
+        mostrarMensaje('Error al cargar el calendario', 'error');
+    }
+}
+
+// Función para mostrar el modal de evento
+function mostrarModalEvento(datos) {
+    const modal = new bootstrap.Modal(document.getElementById('modalEvento'));
+    const form = document.getElementById('formEvento');
+    const titulo = document.getElementById('modalEventoLabel');
+    
+    // Configurar título del modal
+    titulo.textContent = datos.modo === 'crear' ? 'Nuevo Evento' : 'Editar Evento';
+    
+    // Llenar formulario
+    form.eventoId.value = datos.id || '';
+    form.eventoTitulo.value = datos.descripcion || '';
+    form.tipoEvento.value = datos.tipo_evento || 'actividad';
+    form.eventoFecha.value = formatearFecha(datos.fecha, false);
+    
+    // Mostrar/ocultar botón eliminar
+    document.getElementById('btnEliminarEvento').style.display = 
+        datos.modo === 'editar' ? 'block' : 'none';
+    
+    modal.show();
+}
+
+// Función para obtener la clase CSS según el tipo de evento
+function obtenerClaseEvento(tipo) {
+    switch (tipo) {
+        case 'clase':
+            return 'bg-primary';
+        case 'evaluacion':
+            return 'bg-danger';
+        case 'reunion':
+            return 'bg-info';
+        case 'actividad':
+            return 'bg-success';
+        case 'feriado':
+            return 'bg-warning';
+        default:
+            return 'bg-secondary';
+    }
+}
+
+// Función para obtener el tipo de evento desde las clases CSS
+function obtenerTipoEvento(clases) {
+    if (clases.includes('bg-primary')) return 'clase';
+    if (clases.includes('bg-danger')) return 'evaluacion';
+    if (clases.includes('bg-info')) return 'reunion';
+    if (clases.includes('bg-success')) return 'actividad';
+    if (clases.includes('bg-warning')) return 'feriado';
+    return 'actividad';
+}
 }
 
 async function cargarAvisos(container, puedeEditar) {
@@ -524,5 +659,79 @@ async function handleLogout() {
     }
 }
 
+// Funciones para el manejo de eventos del calendario
+async function guardarEvento(evento) {
+    try {
+        if (evento.id) {
+            // Actualizar evento existente
+            const { error } = await supabase
+                .from('calendario_escolar')
+                .update({
+                    descripcion: evento.descripcion,
+                    fecha: evento.fecha,
+                    tipo_evento: evento.tipo_evento
+                })
+                .eq('id', evento.id);
+
+            if (error) throw error;
+            mostrarMensaje('Evento actualizado correctamente', 'success');
+        } else {
+            // Crear nuevo evento
+            const { error } = await supabase
+                .from('calendario_escolar')
+                .insert([{
+                    descripcion: evento.descripcion,
+                    fecha: evento.fecha,
+                    tipo_evento: evento.tipo_evento
+                }]);
+
+            if (error) throw error;
+            mostrarMensaje('Evento creado correctamente', 'success');
+        }
+
+        // Cerrar modal y recargar calendario
+        const modal = bootstrap.Modal.getInstance(document.getElementById('modalEvento'));
+        modal.hide();
+        cargarSeccion('calendario');
+    } catch (error) {
+        console.error('Error al guardar evento:', error);
+        mostrarMensaje('Error al guardar el evento', 'error');
+    }
+}
+
+async function eliminarEvento(eventoId) {
+    try {
+        if (!confirm('¿Está seguro de eliminar este evento?')) return;
+
+        const { error } = await supabase
+            .from('calendario_escolar')
+            .delete()
+            .eq('id', eventoId);
+
+        if (error) throw error;
+
+        mostrarMensaje('Evento eliminado correctamente', 'success');
+        
+        // Cerrar modal y recargar calendario
+        const modal = bootstrap.Modal.getInstance(document.getElementById('modalEvento'));
+        modal.hide();
+        cargarSeccion('calendario');
+    } catch (error) {
+        console.error('Error al eliminar evento:', error);
+        mostrarMensaje('Error al eliminar el evento', 'error');
+    }
+}
+
+// Función para formatear fecha
+function formatearFecha(fecha, incluirHora = true) {
+    if (!fecha) return '';
+    const f = new Date(fecha);
+    return incluirHora ? 
+        f.toISOString().slice(0, 16) : // Con hora (YYYY-MM-DDTHH:mm)
+        f.toISOString().slice(0, 10);  // Solo fecha (YYYY-MM-DD)
+}
+
 // Exportar funciones necesarias
 window.handleLogout = handleLogout;
+window.guardarEvento = guardarEvento;
+window.eliminarEvento = eliminarEvento;
