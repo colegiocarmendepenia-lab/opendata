@@ -2,8 +2,8 @@
 import { supabase } from '../auth.js';
 
 const VERSION = '1.0.32';
-const TIMESTAMP = new Date().toISOString();
-console.log(`[Horarios v${VERSION} - ${TIMESTAMP}] Iniciando módulo de servicio de horarios...`);
+console.log(`[Horarios v${VERSION}] Iniciando módulo de servicio de horarios...`);
+console.log('[Horarios] Versión del módulo:', VERSION);
 console.log('[Horarios] URL de Supabase:', supabase?.supabaseUrl);
 console.log('[Horarios] Cliente Supabase:', {
     auth: !!supabase?.auth,

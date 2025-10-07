@@ -34,13 +34,19 @@ function configurarModalHorario() {
     }
 }
 
+// Versión del módulo UI
+const VERSION = '1.0.32';
+
 // Función para cargar la interfaz de horarios
 export async function cargarHorariosUI(container) {
-    console.log('[Horarios UI] Iniciando carga de horarios...');
+    console.log(`[Horarios UI v${VERSION}] Iniciando carga de horarios...`);
     try {
         // Preparar la interfaz
         container.innerHTML = `
             <div class="card">
+                <div class="position-absolute top-0 end-0 p-2">
+                    <small class="text-muted">v${VERSION}</small>
+                </div>
                 <div class="card-header">
                     <div class="row align-items-center">
                         <div class="col-md-6">
