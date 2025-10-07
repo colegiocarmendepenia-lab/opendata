@@ -156,13 +156,20 @@ export async function cargarHorariosUI(container) {
 
 // Función para mostrar el horario en la tabla
 function mostrarHorario(horarioEscolar) {
+    console.log('[Horarios UI] Mostrando horario en la tabla:', horarioEscolar);
+    
     const container = document.getElementById('horarioContainer');
     const tbody = document.getElementById('tablaHorario');
+    if (!tbody) {
+        console.error('[Horarios UI] No se encontró el elemento tablaHorario');
+        return;
+    }
     tbody.innerHTML = '';
 
     // Ordenar horario por hora de inicio y día
     const horarioPorHora = {};
     horarioEscolar.forEach(clase => {
+        console.log('[Horarios UI] Procesando clase:', clase);
         const horaInicio = clase.hora_inicio;
         if (!horarioPorHora[horaInicio]) {
             horarioPorHora[horaInicio] = {
@@ -171,10 +178,16 @@ function mostrarHorario(horarioEscolar) {
         }
 
         const dia = obtenerDiaSemana(clase.dia_semana);
+        
         horarioPorHora[horaInicio][dia] = `
             <div>
-                <strong>${clase.materia}</strong><br>
-                <small>${clase.profesor}</small>
+                <strong>${clase.materia || 'Sin materia'}</strong><br>
+                <small>${clase.profesor || 'Sin profesor'}</small>
+                <small class="d-block text-muted">
+                    ${clase.nivel ? `Nivel: ${clase.nivel}<br>` : ''}
+                    ${clase.turno ? `Turno: ${clase.turno}<br>` : ''}
+                    ${clase.periodo ? `Periodo: ${clase.periodo}` : ''}
+                </small>
             </div>
         `;
     });
@@ -232,14 +245,26 @@ function mostrarEstudiantes(estudiantes) {
 
 // Función auxiliar para obtener el nombre del día
 function obtenerDiaSemana(dia) {
+    console.log('[Horarios UI] Procesando día de la semana:', dia);
     const dias = {
         'Lunes': 'lunes',
         'Martes': 'martes',
         'Miércoles': 'miercoles',
+        'Miercoles': 'miercoles',
         'Jueves': 'jueves',
-        'Viernes': 'viernes'
+        'Viernes': 'viernes',
+        'LUNES': 'lunes',
+        'MARTES': 'martes',
+        'MIÉRCOLES': 'miercoles',
+        'MIERCOLES': 'miercoles',
+        'JUEVES': 'jueves',
+        'VIERNES': 'viernes'
     };
-    return dias[dia] || '';
+    const diaFormateado = dias[dia];
+    if (!diaFormateado) {
+        console.warn('[Horarios UI] Día no reconocido:', dia);
+    }
+    return diaFormateado || '';
 }
 
 // Función auxiliar para formatear hora

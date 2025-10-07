@@ -9,40 +9,44 @@ export async function obtenerHorariosPorCurso(curso, anio = new Date().getFullYe
     console.log(`[Horarios] Obteniendo horarios para curso ${curso} del año ${anio}`);
     console.log('[Horarios] Estado de Supabase:', !!supabase);
     try {
+        console.log('[Horarios] Consultando tabla horario para el curso:', curso);
         const { data: horario, error: horarioError } = await supabase
             .from('horario')
-            .select('id, curso')
+            .select('*')
             .eq('curso', curso)
             .eq('anio', anio)
             .single();
 
-        if (horarioError) throw horarioError;
+        console.log('[Horarios] Resultado consulta horario:', { data: horario, error: horarioError });
+
+        if (horarioError) {
+            console.error('[Horarios] Error al obtener horario:', horarioError);
+            throw horarioError;
+        }
 
         if (!horario) {
             console.log('[Horarios] No se encontró horario para el curso');
             return { horario: null, horarioEscolar: [], estudiantes: [] };
         }
 
+        console.log('[Horarios] Consultando tabla horario_escolar para id_horario:', horario.id);
         // Obtener detalle del horario escolar
         const { data: horarioEscolar, error: horarioEscolarError } = await supabase
             .from('horario_escolar')
-            .select(`
-                id,
-                nivel,
-                turno,
-                curso,
-                dia_semana,
-                hora_inicio,
-                hora_fin,
-                periodo,
-                materia,
-                profesor
-            `)
+            .select('*')
             .eq('id_horario', horario.id)
             .order('dia_semana', { ascending: true })
             .order('hora_inicio', { ascending: true });
 
-        if (horarioEscolarError) throw horarioEscolarError;
+        console.log('[Horarios] Resultado consulta horario_escolar:', { 
+            data: horarioEscolar, 
+            error: horarioEscolarError 
+        });
+
+        if (horarioEscolarError) {
+            console.error('[Horarios] Error al obtener horario_escolar:', horarioEscolarError);
+            throw horarioEscolarError;
+        }
 
         // Obtener estudiantes del curso
         const { data: horarioEstudiantes, error: estudiantesError } = await supabase
@@ -80,16 +84,26 @@ export async function obtenerHorariosPorCurso(curso, anio = new Date().getFullYe
 export async function obtenerCursos(anio = new Date().getFullYear()) {
     console.log(`[Horarios] Obteniendo lista de cursos del año ${anio}`);
     try {
+        console.log('[Horarios] Ejecutando consulta a la tabla horario...');
         const { data, error } = await supabase
             .from('horario')
             .select('curso')
             .eq('anio', anio)
+            .not('curso', 'is', null)
             .order('curso');
 
-        if (error) throw error;
-        return data.map(h => h.curso);
+        if (error) {
+            console.error('[Horarios] Error al obtener cursos:', error);
+            throw error;
+        }
+
+        console.log('[Horarios] Datos obtenidos de la tabla horario:', data);
+        // Filtrar cursos nulos y duplicados
+        const cursos = [...new Set(data.map(h => h.curso).filter(Boolean))];
+        console.log('[Horarios] Lista de cursos procesada:', cursos);
+        return cursos;
     } catch (error) {
-        console.error('[Horarios] Error al obtener cursos:', error.message);
+        console.error('[Horarios] Error al obtener cursos:', error);
         throw error;
     }
 }
