@@ -83,10 +83,21 @@ export async function obtenerHorariosPorCurso(curso, anio = new Date().getFullYe
 // Función para obtener la lista de cursos disponibles
 export async function obtenerCursos(anio = new Date().getFullYear()) {
     try {
+        console.log('[Horarios] Consultando horarios para el año:', anio);
+        
+        // Primero, veamos todos los registros sin filtro para verificar los datos
+        const { data: todosLosRegistros, error: errorTodos } = await supabase
+            .from('horario')
+            .select('id, curso, anio');
+            
+        console.log('[Horarios] Todos los registros en la tabla:', todosLosRegistros);
+        
+        // Ahora hacemos la consulta con filtro
         const { data, error } = await supabase
             .from('horario')
             .select('id, curso, anio')
-            .eq('anio', anio)
+            .eq('anio', parseInt(anio)) // Convertimos el año a entero
+            .is('curso', 'not.null') // Solo cursos no nulos
             .order('curso', { ascending: true });
 
         if (error) {
@@ -94,13 +105,15 @@ export async function obtenerCursos(anio = new Date().getFullYear()) {
             throw error;
         }
 
-        // Extraer solo los cursos únicos
-        const cursos = [...new Set(data.map(h => h.curso))];
+        console.log('[Horarios] Registros filtrados por año:', data);
+
+        // Extraer solo los cursos únicos y no nulos
+        const cursos = [...new Set(data.filter(h => h.curso).map(h => h.curso))];
         console.log('[Horarios] Cursos encontrados:', cursos);
         
         return cursos;
     } catch (error) {
-        console.error('[Horarios] Error en obtenerCursos:', error.message);
+        console.error('[Horarios] Error en obtenerCursos:', error);
         return [];
     }
 }
