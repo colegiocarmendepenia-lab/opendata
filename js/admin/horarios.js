@@ -4,6 +4,47 @@ import { supabase } from '../auth.js';
 console.log('[Horarios] Iniciando módulo de servicio de horarios...');
 console.log('[Horarios] Instancia de Supabase disponible:', !!supabase);
 
+// Función para verificar permisos
+async function verificarPermisos() {
+    console.log('[Horarios] Verificando permisos...');
+    try {
+        // Intentar insertar un registro de prueba
+        const registroPrueba = {
+            curso: '_test_',
+            anio: 2025
+        };
+        
+        console.log('[Horarios] Intentando insertar registro de prueba:', registroPrueba);
+        const { data: insertData, error: insertError } = await supabase
+            .from('horario')
+            .insert([registroPrueba])
+            .select();
+            
+        if (insertError) {
+            console.error('[Horarios] Error al insertar:', insertError);
+            return { tienePermisoInsertar: false, error: insertError };
+        }
+
+        // Si llegamos aquí, la inserción fue exitosa, eliminemos el registro de prueba
+        if (insertData && insertData[0]?.id) {
+            console.log('[Horarios] Eliminando registro de prueba...');
+            const { error: deleteError } = await supabase
+                .from('horario')
+                .delete()
+                .eq('id', insertData[0].id);
+                
+            if (deleteError) {
+                console.error('[Horarios] Error al eliminar registro de prueba:', deleteError);
+            }
+        }
+
+        return { tienePermisoInsertar: true, error: null };
+    } catch (error) {
+        console.error('[Horarios] Error al verificar permisos:', error);
+        return { tienePermisoInsertar: false, error };
+    }
+}
+
 // Función para obtener los horarios por curso
 export async function obtenerHorariosPorCurso(curso, anio = new Date().getFullYear()) {
     console.log(`[Horarios] Obteniendo horarios para curso ${curso} del año ${anio}`);
@@ -84,7 +125,12 @@ export async function obtenerHorariosPorCurso(curso, anio = new Date().getFullYe
 export async function obtenerCursos(anio = new Date().getFullYear()) {
     console.log(`[Horarios] Obteniendo lista de cursos del año ${anio}`);
     try {
-        console.log('[Horarios] Estado de sesión actual:', await supabase.auth.getSession());
+        const sesion = await supabase.auth.getSession();
+        console.log('[Horarios] Estado de sesión actual:', sesion);
+        
+        // Verificar permisos
+        const { tienePermisoInsertar, error: permisoError } = await verificarPermisos();
+        console.log('[Horarios] Resultado verificación de permisos:', { tienePermisoInsertar, error: permisoError });
         console.log('[Horarios] Ejecutando consulta a la tabla horario...');
         
         // Primero intentemos obtener todos los registros para ver qué hay
@@ -116,6 +162,15 @@ export async function obtenerCursos(anio = new Date().getFullYear()) {
         // Filtrar cursos nulos y duplicados
         const cursos = [...new Set(data.map(h => h.curso).filter(Boolean))];
         console.log('[Horarios] Lista de cursos procesada:', cursos);
+        
+        if (cursos.length === 0) {
+            const mensaje = 'No se encontraron cursos en la base de datos. ' + 
+                          (permisoError ? 'Error de permisos: ' + permisoError.message : 
+                           'Verifique que tenga los permisos necesarios.');
+            console.warn('[Horarios] ' + mensaje);
+            throw new Error(mensaje);
+        }
+        
         return cursos;
     } catch (error) {
         console.error('[Horarios] Error al obtener cursos:', error);
