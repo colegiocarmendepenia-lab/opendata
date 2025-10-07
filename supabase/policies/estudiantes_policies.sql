@@ -15,22 +15,29 @@ with check (
     auth.jwt() ->> 'role' in ('admin', 'coordinador')
 );
 
--- Política para UPDATE: permitir actualizar estudiantes a administradores, coordinadores y docentes asignados
-create policy "Administradores, coordinadores y docentes pueden actualizar estudiantes"
+-- Política para UPDATE: permitir actualizar estudiantes a administradores y coordinadores
+-- También permite a los profesores actualizar estudiantes de los grados asignados
+create policy "Administradores, coordinadores y profesores pueden actualizar estudiantes"
 on estudiantes for update
 to authenticated
 using (
     auth.jwt() ->> 'role' in ('admin', 'coordinador') or
-    auth.jwt() ->> 'user_id' in (
-        select profesor_id from asignaciones_curso 
-        where curso_id = estudiantes.curso_id
+    exists (
+        select 1 
+        from asignaciones_docentes ad
+        where ad.profesor_id = (auth.jwt() ->> 'user_id')::uuid
+        and ad.grado = estudiantes.grado
+        and ad.seccion = estudiantes.seccion
     )
 )
 with check (
     auth.jwt() ->> 'role' in ('admin', 'coordinador') or
-    auth.jwt() ->> 'user_id' in (
-        select profesor_id from asignaciones_curso 
-        where curso_id = estudiantes.curso_id
+    exists (
+        select 1 
+        from asignaciones_docentes ad
+        where ad.profesor_id = (auth.jwt() ->> 'user_id')::uuid
+        and ad.grado = estudiantes.grado
+        and ad.seccion = estudiantes.seccion
     )
 );
 
