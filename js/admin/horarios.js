@@ -96,8 +96,8 @@ export async function obtenerCursos(anio = new Date().getFullYear()) {
         const { data, error } = await supabase
             .from('horario')
             .select('id, curso, anio')
+            .not('curso', 'is', null) // Sintaxis correcta para "no es nulo"
             .eq('anio', parseInt(anio)) // Convertimos el año a entero
-            .is('curso', 'not.null') // Solo cursos no nulos
             .order('curso', { ascending: true });
 
         if (error) {
@@ -108,7 +108,7 @@ export async function obtenerCursos(anio = new Date().getFullYear()) {
         console.log('[Horarios] Registros filtrados por año:', data);
 
         // Extraer solo los cursos únicos y no nulos
-        const cursos = [...new Set(data.filter(h => h.curso).map(h => h.curso))];
+        const cursos = [...new Set(data.map(h => h.curso))]; // Ya filtramos los nulos en la consulta
         console.log('[Horarios] Cursos encontrados:', cursos);
         
         return cursos;
