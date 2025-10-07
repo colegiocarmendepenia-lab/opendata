@@ -1,7 +1,7 @@
 // Módulo para gestionar los horarios
-import { supabase } from '../auth.js';
+import { supabase, mostrarError } from '../auth.js';
 
-const VERSION = '1.0.32';
+const VERSION = '1.0.33';
 console.log(`[Horarios v${VERSION}] Iniciando módulo de servicio de horarios...`);
 console.log('[Horarios] Versión del módulo:', VERSION);
 console.log('[Horarios] URL de Supabase:', supabase?.supabaseUrl);
@@ -89,45 +89,28 @@ export async function obtenerHorariosPorCurso(curso, anio = new Date().getFullYe
 
 // Función para obtener la lista de cursos disponibles
 export async function obtenerCursos(anio = new Date().getFullYear()) {
+    console.log('[Horarios] Consultando horarios para el año:', anio);
     try {
-        console.log('[Horarios] Consultando horarios para el año:', anio);
-        console.log('[Horarios] Tipo de dato año:', typeof anio);
-        
-        // Primero veamos todos los registros sin filtro
-        const { data: todosRegistros, error: errorTodos } = await supabase
+        const { data, error } = await supabase
             .from('horario')
-            .select('*');
-            
-        console.log('[Horarios] Todos los registros en la tabla:', todosRegistros);
-        
-        // Ahora hacemos la consulta con filtro
-        const query = supabase
-            .from('horario')
-            .select('curso')
+            .select('id, curso, anio, created_at')
+            .eq('anio', anio)
             .order('curso');
-            
-        // Aplicamos el filtro por año si no es undefined o null
-        if (anio) {
-            query.eq('anio', parseInt(anio));
-        }
-        
-        const { data, error } = await query;
 
         if (error) {
-            console.error('[Horarios] Error al consultar horarios:', error);
-            throw error;
+            console.error('[Horarios] Error al obtener horarios:', error.message);
+            mostrarError('Error al obtener los horarios');
+            return [];
         }
 
-        console.log('[Horarios] Query URL:', query.url);
-        console.log('[Horarios] Registros filtrados:', data);
-
-        // Extraer solo los cursos únicos y no nulos
+        console.log('[Horarios] Registros obtenidos:', data);
         const cursos = [...new Set(data.filter(h => h.curso).map(h => h.curso))];
         console.log('[Horarios] Cursos encontrados:', cursos);
-        
+
         return cursos;
     } catch (error) {
-        console.error('[Horarios] Error en obtenerCursos:', error);
+        console.error('[Horarios] Error en obtenerCursos:', error.message);
+        mostrarError('Error al obtener los horarios');
         return [];
     }
 }
