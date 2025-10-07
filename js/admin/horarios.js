@@ -91,20 +91,35 @@ export async function obtenerHorariosPorCurso(curso, anio = new Date().getFullYe
 export async function obtenerCursos(anio = new Date().getFullYear()) {
     try {
         console.log('[Horarios] Consultando horarios para el año:', anio);
+        console.log('[Horarios] Tipo de dato año:', typeof anio);
         
-        // Hacer una única consulta simple
-        const { data, error } = await supabase
+        // Primero veamos todos los registros sin filtro
+        const { data: todosRegistros, error: errorTodos } = await supabase
+            .from('horario')
+            .select('*');
+            
+        console.log('[Horarios] Todos los registros en la tabla:', todosRegistros);
+        
+        // Ahora hacemos la consulta con filtro
+        const query = supabase
             .from('horario')
             .select('curso')
-            .eq('anio', parseInt(anio))
             .order('curso');
+            
+        // Aplicamos el filtro por año si no es undefined o null
+        if (anio) {
+            query.eq('anio', parseInt(anio));
+        }
+        
+        const { data, error } = await query;
 
         if (error) {
             console.error('[Horarios] Error al consultar horarios:', error);
             throw error;
         }
 
-        console.log('[Horarios] Registros obtenidos:', data);
+        console.log('[Horarios] Query URL:', query.url);
+        console.log('[Horarios] Registros filtrados:', data);
 
         // Extraer solo los cursos únicos y no nulos
         const cursos = [...new Set(data.filter(h => h.curso).map(h => h.curso))];
