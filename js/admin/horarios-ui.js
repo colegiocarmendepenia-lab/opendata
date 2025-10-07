@@ -1,6 +1,6 @@
 // Módulo para la interfaz de usuario de horarios
 import { obtenerHorariosPorCurso, obtenerCursos } from './horarios.js';
-import { mostrarError } from '../auth.js';
+import { supabase, mostrarError, mostrarExito } from '../auth.js';
 
 console.log('[Horarios UI] Iniciando módulo de interfaz de horarios...');
 
@@ -9,7 +9,7 @@ function configurarModalHorario() {
     console.log('[Horarios UI] Configurando modal de horarios...');
     
     // Obtener referencias a los elementos del modal
-    const btnNuevoHorario = document.querySelector('.btn-primary[data-action="nuevo-horario"]');
+    const btnNuevoHorario = document.getElementById('btnNuevoHorario');
     const modalHorario = document.getElementById('modalHorario');
     const formHorario = document.getElementById('formHorario');
     
@@ -224,4 +224,45 @@ function obtenerDiaSemana(dia) {
 // Función auxiliar para formatear hora
 function formatearHora(hora) {
     return hora.slice(0, 5); // Mostrar solo HH:MM
+}
+
+// Función para guardar un horario
+async function guardarHorario(form) {
+    try {
+        console.log('[Horarios UI] Iniciando guardado de horario...');
+        
+        // Obtener datos del formulario
+        const datos = {
+            curso: form.curso.value.trim(),
+            anio: new Date().getFullYear()
+        };
+
+        console.log('[Horarios UI] Datos del horario:', datos);
+
+        // Crear horario
+        const { data, error } = await supabase
+            .from('horario')
+            .insert([datos])
+            .select();
+
+        if (error) {
+            console.error('[Horarios UI] Error al guardar horario:', error);
+            mostrarError('Error al guardar el horario');
+            return;
+        }
+
+        console.log('[Horarios UI] Horario guardado:', data);
+        mostrarExito('Horario guardado exitosamente');
+
+        // Cerrar modal y recargar datos
+        const modal = bootstrap.Modal.getInstance(document.getElementById('modalHorario'));
+        modal.hide();
+        
+        // Recargar la tabla
+        await cargarHorariosUI(document.getElementById('mainContent'));
+
+    } catch (error) {
+        console.error('[Horarios UI] Error al guardar horario:', error);
+        mostrarError('Error al guardar el horario');
+    }
 }
