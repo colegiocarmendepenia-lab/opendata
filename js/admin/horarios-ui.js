@@ -59,10 +59,13 @@ export async function cargarHorariosUI(container) {
                     </span>
                 </td>
                 <td>
-                    <button class="btn btn-sm btn-outline-primary btn-editar me-1" data-id="${horario.id}">
+                    <button class="btn btn-sm btn-outline-info btn-ver-detalle me-1" data-id="${horario.id}" title="Ver detalle">
+                        <i class="bi bi-eye"></i>
+                    </button>
+                    <button class="btn btn-sm btn-outline-primary btn-editar me-1" data-id="${horario.id}" title="Editar">
                         <i class="bi bi-pencil"></i>
                     </button>
-                    <button class="btn btn-sm btn-outline-danger btn-eliminar" data-id="${horario.id}">
+                    <button class="btn btn-sm btn-outline-danger btn-eliminar" data-id="${horario.id}" title="Eliminar">
                         <i class="bi bi-trash"></i>
                     </button>
                 </td>
@@ -86,7 +89,7 @@ export async function cargarHorariosUI(container) {
         });
 
         // Configurar eventos de botones de acciones
-        tbody.addEventListener('click', (e) => {
+        tbody.addEventListener('click', async (e) => {
             const boton = e.target.closest('button');
             if (!boton) return;
 
@@ -100,6 +103,8 @@ export async function cargarHorariosUI(container) {
                 });
             } else if (boton.classList.contains('btn-eliminar')) {
                 confirmarEliminarHorario(id);
+            } else if (boton.classList.contains('btn-ver-detalle')) {
+                await mostrarDetalleHorario(horario);
             }
         });
 
@@ -214,5 +219,83 @@ function confirmarEliminarHorario(id) {
                 console.error('[Horarios UI] Error al eliminar horario:', error);
                 mostrarError('Error al eliminar el horario');
             });
+    }
+}
+
+// Función para mostrar el detalle del horario
+async function mostrarDetalleHorario(horario) {
+    try {
+        console.log('[Horarios UI] Cargando detalle del horario:', horario);
+
+        // Obtener los detalles del horario_escolar
+        const { data: detalles, error } = await supabase
+            .from('horario_escolar')
+            .select(`
+                id,
+                dia_semana,
+                hora_inicio,
+                hora_fin,
+                materia,
+                profesor,
+                nivel,
+                turno
+            `)
+            .eq('horario_id', horario.id)
+            .order('dia_semana', { ascending: true })
+            .order('hora_inicio', { ascending: true });
+
+        if (error) throw error;
+
+        console.log('[Horarios UI] Detalles obtenidos:', detalles);
+
+        // Preparar el contenido del modal
+        const modal = new bootstrap.Modal(document.getElementById('modalDetalleHorario'));
+        const tbody = document.querySelector('#tablaDetalleHorario tbody');
+        
+        document.getElementById('detalleHorarioLabel').textContent = 
+            `Detalle del Horario - ${horario.curso} (${horario.anio})`;
+
+        tbody.innerHTML = detalles.map(detalle => `
+            <tr>
+                <td>${detalle.dia_semana || 'No especificado'}</td>
+                <td>${detalle.hora_inicio ? detalle.hora_inicio.slice(0,5) : 'No especificado'} - 
+                    ${detalle.hora_fin ? detalle.hora_fin.slice(0,5) : 'No especificado'}</td>
+                <td>${detalle.materia || 'No especificado'}</td>
+                <td>${detalle.profesor || 'No especificado'}</td>
+                <td>
+                    <span class="badge bg-secondary">
+                        ${detalle.nivel || 'No especificado'}
+                    </span>
+                </td>
+                <td>
+                    <span class="badge bg-info">
+                        ${detalle.turno || 'No especificado'}
+                    </span>
+                </td>
+                <td>
+                    <button class="btn btn-sm btn-outline-primary btn-editar-detalle me-1" data-id="${detalle.id}">
+                        <i class="bi bi-pencil"></i>
+                    </button>
+                    <button class="btn btn-sm btn-outline-danger btn-eliminar-detalle" data-id="${detalle.id}">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </td>
+            </tr>
+        `).join('') || '<tr><td colspan="7" class="text-center">No hay detalles disponibles</td></tr>';
+
+        // Configurar el botón para agregar nuevo detalle
+        document.getElementById('btnNuevoDetalle').onclick = () => {
+            mostrarModalDetalleHorario({
+                modo: 'crear',
+                horario_id: horario.id
+            });
+        };
+
+        // Mostrar el modal
+        modal.show();
+
+    } catch (error) {
+        console.error('[Horarios UI] Error al cargar detalles:', error);
+        mostrarError('Error al cargar los detalles del horario');
     }
 }
