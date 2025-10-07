@@ -44,115 +44,63 @@ export async function cargarHorariosUI(container) {
         // Preparar la interfaz
         container.innerHTML = `
             <div class="card">
-                <div class="position-absolute top-0 end-0 p-2">
-                    <small class="text-muted">v${VERSION}</small>
-                </div>
-                <div class="card-header">
-                    <div class="row align-items-center">
-                        <div class="col-md-6">
-                            <h5 class="mb-0">Horarios Escolares</h5>
-                        </div>
-                        <div class="col-md-6 d-flex justify-content-end">
-                            <div class="input-group">
-                                <label class="input-group-text" for="selectCurso">Curso:</label>
-                                <select class="form-select" id="selectCurso">
-                                    <option value="">Seleccione un curso...</option>
-                                </select>
-                                <button class="btn btn-primary ms-2" data-action="nuevo-horario">
-                                    <i class="bi bi-plus"></i> Nuevo Horario
-                                </button>
-                            </div>
-                        </div>
-                    </div>
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Horarios Escolares</h5>
+                    <button class="btn btn-primary" id="btnNuevoHorario">
+                        <i class="bi bi-plus-circle"></i> Nuevo Horario
+                    </button>
                 </div>
                 <div class="card-body">
-                    <div id="horarioContainer" class="mb-4" style="display: none;">
-                        <h6 class="mb-3">Horario de Clases</h6>
-                        <div class="table-responsive">
-                            <table class="table table-bordered table-hover">
-                                <thead class="table-light">
-                                    <tr>
-                                        <th>Hora</th>
-                                        <th>Lunes</th>
-                                        <th>Martes</th>
-                                        <th>Miércoles</th>
-                                        <th>Jueves</th>
-                                        <th>Viernes</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="tablaHorario"></tbody>
-                            </table>
-                        </div>
-                    </div>
-                    <div id="estudiantesContainer" class="mt-4" style="display: none;">
-                        <h6 class="mb-3">Estudiantes del Curso</h6>
-                        <div class="table-responsive">
-                            <table class="table table-hover" id="tablaEstudiantes">
-                                <thead>
-                                    <tr>
-                                        <th>Código</th>
-                                        <th>Nombre</th>
-                                        <th>Apellido</th>
-                                        <th>Grado</th>
-                                        <th>Sección</th>
-                                    </tr>
-                                </thead>
-                                <tbody></tbody>
-                            </table>
-                        </div>
+                    <div class="table-responsive">
+                        <table class="table table-hover" id="tablaHorarios">
+                            <thead>
+                                <tr>
+                                    <th>Curso</th>
+                                    <th>Año</th>
+                                    <th>Creado</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
                     </div>
                 </div>
             </div>
         `;
 
-        // Obtener y cargar la lista de cursos
-        const cursos = await obtenerCursos();
-        console.log('[Horarios UI] Cursos obtenidos:', cursos);
-        
-        const selectCurso = document.getElementById('selectCurso');
-        if (!selectCurso) {
-            console.error('[Horarios UI] No se encontró el elemento selectCurso');
-            return;
-        }
-        
-        cursos.forEach(curso => {
-            const option = document.createElement('option');
-            option.value = curso;
-            option.textContent = curso;
-            selectCurso.appendChild(option);
+        // Obtener y mostrar los horarios
+        const horarios = await obtenerCursos();
+        console.log('[Horarios UI] Datos en bruto de la tabla horario:', horarios);
+
+        // Mostrar horarios en la tabla
+        const tbody = document.querySelector('#tablaHorarios tbody');
+        tbody.innerHTML = horarios.map(horario => `
+            <tr>
+                <td>${horario.curso || 'No definido'}</td>
+                <td>${horario.anio || 'No definido'}</td>
+                <td>${horario.created_at ? new Date(horario.created_at).toLocaleString() : 'No definido'}</td>
+                <td>
+                    <button class="btn btn-sm btn-outline-primary btn-editar me-1" data-id="${horario.id}">
+                        <i class="bi bi-pencil"></i>
+                    </button>
+                    <button class="btn btn-sm btn-outline-danger btn-eliminar" data-id="${horario.id}">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </td>
+            </tr>
+        `).join('');
+
+        // Inicializar DataTable
+        $('#tablaHorarios').DataTable({
+            language: {
+                url: 'https://cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json'
+            },
+            responsive: true,
+            order: [[0, 'asc']]
         });
-        
+
         // Configurar los eventos del modal
         configurarModalHorario();
-
-        // Configurar evento de cambio de curso
-        selectCurso.addEventListener('change', async () => {
-            const curso = selectCurso.value;
-            if (!curso) {
-                document.getElementById('horarioContainer').style.display = 'none';
-                document.getElementById('estudiantesContainer').style.display = 'none';
-                return;
-            }
-
-            try {
-                const { horario, horarioEscolar, estudiantes } = await obtenerHorariosPorCurso(curso);
-                
-                if (!horario) {
-                    mostrarError('No se encontró el horario para este curso');
-                    return;
-                }
-
-                // Mostrar horario
-                mostrarHorario(horarioEscolar);
-                
-                // Mostrar lista de estudiantes
-                mostrarEstudiantes(estudiantes);
-
-            } catch (error) {
-                console.error('[Horarios UI] Error al cargar horario:', error);
-                mostrarError('Error al cargar el horario');
-            }
-        });
 
     } catch (error) {
         console.error('[Horarios UI] Error al cargar interfaz:', error);

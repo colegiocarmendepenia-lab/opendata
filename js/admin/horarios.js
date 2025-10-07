@@ -89,13 +89,11 @@ export async function obtenerHorariosPorCurso(curso, anio = new Date().getFullYe
 
 // Función para obtener la lista de cursos disponibles
 export async function obtenerCursos(anio = new Date().getFullYear()) {
-    console.log('[Horarios] Consultando horarios para el año:', anio);
+    console.log('[Horarios] Consultando todos los horarios sin filtros...');
     try {
         const { data, error } = await supabase
             .from('horario')
-            .select('id, curso, anio, created_at')
-            .eq('anio', anio)
-            .order('curso');
+            .select('*');
 
         if (error) {
             console.error('[Horarios] Error al obtener horarios:', error.message);
@@ -103,11 +101,10 @@ export async function obtenerCursos(anio = new Date().getFullYear()) {
             return [];
         }
 
-        console.log('[Horarios] Registros obtenidos:', data);
-        const cursos = [...new Set(data.filter(h => h.curso).map(h => h.curso))];
-        console.log('[Horarios] Cursos encontrados:', cursos);
-
-        return cursos;
+        console.log('[Horarios] Todos los registros de la tabla horario:', data);
+        
+        // Retornar todos los datos en bruto para diagnóstico
+        return data;
     } catch (error) {
         console.error('[Horarios] Error en obtenerCursos:', error.message);
         mostrarError('Error al obtener los horarios');
