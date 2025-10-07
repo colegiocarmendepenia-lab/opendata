@@ -2,8 +2,14 @@
 import { supabase } from '../auth.js';
 
 const VERSION = '1.0.32';
-console.log(`[Horarios v${VERSION}] Iniciando módulo de servicio de horarios...`);
-console.log('[Horarios] Instancia de Supabase disponible:', !!supabase);
+const TIMESTAMP = new Date().toISOString();
+console.log(`[Horarios v${VERSION} - ${TIMESTAMP}] Iniciando módulo de servicio de horarios...`);
+console.log('[Horarios] URL de Supabase:', supabase?.supabaseUrl);
+console.log('[Horarios] Cliente Supabase:', {
+    auth: !!supabase?.auth,
+    storage: !!supabase?.storage,
+    functions: !!supabase?.functions
+});
 
 // Función para obtener los horarios por curso
 export async function obtenerHorariosPorCurso(curso, anio = new Date().getFullYear()) {
@@ -86,30 +92,22 @@ export async function obtenerCursos(anio = new Date().getFullYear()) {
     try {
         console.log('[Horarios] Consultando horarios para el año:', anio);
         
-        // Primero, veamos todos los registros sin filtro para verificar los datos
-        const { data: todosLosRegistros, error: errorTodos } = await supabase
-            .from('horario')
-            .select('id, curso, anio');
-            
-        console.log('[Horarios] Todos los registros en la tabla:', todosLosRegistros);
-        
-        // Ahora hacemos la consulta con filtro
+        // Hacer una única consulta simple
         const { data, error } = await supabase
             .from('horario')
-            .select('id, curso, anio')
-            .not('curso', 'is', null) // Sintaxis correcta para "no es nulo"
-            .eq('anio', parseInt(anio)) // Convertimos el año a entero
-            .order('curso', { ascending: true });
+            .select('curso')
+            .eq('anio', parseInt(anio))
+            .order('curso');
 
         if (error) {
             console.error('[Horarios] Error al consultar horarios:', error);
             throw error;
         }
 
-        console.log('[Horarios] Registros filtrados por año:', data);
+        console.log('[Horarios] Registros obtenidos:', data);
 
         // Extraer solo los cursos únicos y no nulos
-        const cursos = [...new Set(data.map(h => h.curso))]; // Ya filtramos los nulos en la consulta
+        const cursos = [...new Set(data.filter(h => h.curso).map(h => h.curso))];
         console.log('[Horarios] Cursos encontrados:', cursos);
         
         return cursos;
