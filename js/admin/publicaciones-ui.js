@@ -146,21 +146,52 @@ function mostrarModalPublicacion(datos) {
     modal.show();
 }
 
+// Función para obtener el ID del administrador del usuario actual
+async function obtenerIdAdministrador(userId) {
+    console.log('[Publicaciones UI] Buscando ID de administrador para usuario:', userId);
+    try {
+        // Consultamos directamente la tabla administrador
+        const { data, error } = await supabase
+            .from('administrador')
+            .select('id')
+            .eq('auth_user_id', userId)
+            .single();
+
+        console.log('[Publicaciones UI] Resultado consulta administrador:', { data, error });
+        
+        console.log('[Publicaciones UI] Resultado de búsqueda de administrador:', { data, error });
+
+        if (error) throw error;
+        return data?.id;
+    } catch (error) {
+        console.error('[Publicaciones UI] Error al obtener ID de administrador:', error);
+        return null;
+    }
+}
+
 // Función para guardar publicación
 async function guardarPublicacion(form) {
     try {
+        console.log('[Publicaciones UI] Iniciando guardado de publicación...');
+        
         // Obtener el usuario actual
         const { data: { session } } = await supabase.auth.getSession();
+        console.log('[Publicaciones UI] Sesión de usuario:', session ? {
+            id: session.user.id,
+            email: session.user.email
+        } : null);
+
         if (!session) {
             throw new Error('Debe iniciar sesión para crear una publicación');
         }
 
+        console.log('[Publicaciones UI] Preparando datos de la publicación...');
         const publicacion = {
             titulo: form.titulo.value.trim(),
             contenido: form.contenido.value.trim(),
             fecha_publicacion: form.fechaPublicacion.value,
             es_aviso_principal: form.esAvisoPrincipal.checked,
-            autor_id: session.user.id
+            autor_id: session.user.id // Usamos el ID del usuario autenticado directamente
         };
 
         // Validar publicación

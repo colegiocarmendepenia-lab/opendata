@@ -1,6 +1,7 @@
 // Dashboard Coordinador
 import { cargarEventosCalendario } from './calendario-ui.js';
 import { cargarPublicacionesUI } from './publicaciones-ui.js';
+import { cargarHorariosUI } from './horarios-ui.js';
 
 const VERSION = '1.0.17';
 
@@ -137,18 +138,8 @@ async function cargarAvisos(container, puedeEditar) {
 }
 
 async function cargarHorarios(container, puedeEditar) {
-    // TODO: Implementar carga de horarios
-    container.innerHTML = `
-        <div class="card">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <h5 class="mb-0">Horarios</h5>
-                ${puedeEditar ? '<button class="btn btn-primary btn-sm"><i class="bi bi-plus"></i> Nuevo Horario</button>' : ''}
-            </div>
-            <div class="card-body">
-                <p>Horarios aquí</p>
-            </div>
-        </div>
-    `;
+    console.log('[Dashboard Coordinador] Cargando sección de horarios...');
+    await cargarHorariosUI(container);
 }
 
 async function cargarCalificaciones(container, puedeEditar) {

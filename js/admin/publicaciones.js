@@ -33,6 +33,37 @@ export async function obtenerPublicaciones() {
 
 // Función para crear una nueva publicación
 export async function crearPublicacion(publicacion) {
+    console.log('[Publicaciones] Iniciando creación de publicación...');
+    
+    if (!publicacion.autor_id) {
+        console.error('[Publicaciones] Error: autor_id es requerido');
+        throw new Error('El ID del autor es requerido');
+    }
+
+    // Verificar si el autor existe en la tabla administrador
+    const { data: autorExiste, error: errorAutor } = await supabase
+        .from('administrador')
+        .select('id')
+        .eq('id', publicacion.autor_id)
+        .single();
+
+    console.log('[Publicaciones] Verificación de autor:', { 
+        autorExiste, 
+        errorAutor,
+        autor_id: publicacion.autor_id 
+    });
+
+    if (!autorExiste) {
+        console.error('[Publicaciones] Error: El autor no existe en la tabla administrador');
+        throw new Error('El autor especificado no existe');
+    }
+
+    console.log('[Publicaciones] Intentando crear publicación con datos:', {
+        titulo: publicacion.titulo,
+        fecha_publicacion: publicacion.fecha_publicacion,
+        es_aviso_principal: publicacion.es_aviso_principal,
+        autor_id: publicacion.autor_id
+    });
     try {
         const { data, error } = await supabase
             .from('publicaciones')
