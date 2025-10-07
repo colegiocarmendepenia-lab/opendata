@@ -68,19 +68,19 @@ export async function cargarHorariosUI(container) {
             </div>
         `;
 
-        // Obtener y mostrar las publicaciones como ejemplo
-        const { data: publicaciones, error } = await supabase
-            .from('publicaciones')
+        // Obtener y mostrar los horarios
+        const { data: horarios, error } = await supabase
+            .from('horario')
             .select('*')
             .order('fecha_publicacion', { ascending: false });
 
         if (error) throw error;
 
-        console.log('[Horarios UI] Datos de ejemplo obtenidos:', publicaciones);
+        console.log('[Horarios UI] Horarios obtenidos:', horarios);
 
-        // Mostrar publicaciones en la tabla de horarios como ejemplo
+        // Mostrar horarios en la tabla
         const tbody = document.querySelector('#tablaHorarios tbody');
-        tbody.innerHTML = publicaciones.map(pub => `
+        tbody.innerHTML = horarios.map(horario => `
             <tr>
                 <td>${pub.titulo}</td>
                 <td>${formatearFecha(pub.fecha_publicacion)}</td>
@@ -122,12 +122,12 @@ export async function cargarHorariosUI(container) {
             if (!boton) return;
 
             const id = boton.dataset.id;
-            const publicacion = publicaciones.find(p => p.id === id);
+            const horario = horarios.find(h => h.id === id);
 
             if (boton.classList.contains('btn-editar')) {
                 mostrarModalHorario({
                     modo: 'editar',
-                    ...publicacion
+                    ...horario
                 });
             } else if (boton.classList.contains('btn-eliminar')) {
                 confirmarEliminarHorario(id);
