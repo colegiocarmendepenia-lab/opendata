@@ -2,6 +2,7 @@
 import { cargarEventosCalendario } from './calendario-ui.js';
 import { cargarPublicacionesUI } from './publicaciones-ui.js';
 import { cargarHorariosUI } from './horarios-ui.js';
+import { inicializarDatosPrueba } from './init-data.js';
 
 const VERSION = '1.0.17';
 
@@ -53,6 +54,8 @@ document.addEventListener('DOMContentLoaded', () => {
 // Función para inicializar el dashboard
 async function inicializarDashboard() {
     try {
+        // Inicializar datos de prueba si es necesario
+        await inicializarDatosPrueba();
         const { data: { session } } = await supabase.auth.getSession();
         if (!session) {
             window.location.href = '/login.html';
