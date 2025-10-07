@@ -84,7 +84,16 @@ export async function obtenerHorariosPorCurso(curso, anio = new Date().getFullYe
 export async function obtenerCursos(anio = new Date().getFullYear()) {
     console.log(`[Horarios] Obteniendo lista de cursos del año ${anio}`);
     try {
+        console.log('[Horarios] Estado de sesión actual:', await supabase.auth.getSession());
         console.log('[Horarios] Ejecutando consulta a la tabla horario...');
+        
+        // Primero intentemos obtener todos los registros para ver qué hay
+        const { data: todosLosRegistros, error: errorTodos } = await supabase
+            .from('horario')
+            .select('*');
+        console.log('[Horarios] Todos los registros en horario:', todosLosRegistros, 'Error:', errorTodos);
+        
+        // Ahora hacemos la consulta específica
         const { data, error } = await supabase
             .from('horario')
             .select('curso')
@@ -94,6 +103,12 @@ export async function obtenerCursos(anio = new Date().getFullYear()) {
 
         if (error) {
             console.error('[Horarios] Error al obtener cursos:', error);
+            console.error('[Horarios] Detalles adicionales:', {
+                codigo: error.code,
+                mensaje: error.message,
+                detalles: error.details,
+                hint: error.hint
+            });
             throw error;
         }
 
