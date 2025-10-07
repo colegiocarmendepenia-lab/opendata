@@ -55,9 +55,9 @@ export async function cargarHorariosUI(container) {
                         <table class="table table-hover" id="tablaHorarios">
                             <thead>
                                 <tr>
-                                    <th>Curso</th>
-                                    <th>Año</th>
-                                    <th>Creado</th>
+                                    <th>Título</th>
+                                    <th>Fecha</th>
+                                    <th>Estado</th>
                                     <th>Acciones</th>
                                 </tr>
                             </thead>
@@ -68,22 +68,32 @@ export async function cargarHorariosUI(container) {
             </div>
         `;
 
-        // Obtener y mostrar los horarios
-        const horarios = await obtenerCursos();
-        console.log('[Horarios UI] Datos en bruto de la tabla horario:', horarios);
+        // Obtener y mostrar las publicaciones como ejemplo
+        const { data: publicaciones, error } = await supabase
+            .from('publicaciones')
+            .select('*')
+            .order('fecha_publicacion', { ascending: false });
 
-        // Mostrar horarios en la tabla
+        if (error) throw error;
+
+        console.log('[Horarios UI] Datos de ejemplo obtenidos:', publicaciones);
+
+        // Mostrar publicaciones en la tabla de horarios como ejemplo
         const tbody = document.querySelector('#tablaHorarios tbody');
-        tbody.innerHTML = horarios.map(horario => `
+        tbody.innerHTML = publicaciones.map(pub => `
             <tr>
-                <td>${horario.curso || 'No definido'}</td>
-                <td>${horario.anio || 'No definido'}</td>
-                <td>${horario.created_at ? new Date(horario.created_at).toLocaleString() : 'No definido'}</td>
+                <td>${pub.titulo}</td>
+                <td>${formatearFecha(pub.fecha_publicacion)}</td>
                 <td>
-                    <button class="btn btn-sm btn-outline-primary btn-editar me-1" data-id="${horario.id}">
+                    <span class="badge ${pub.es_aviso_principal ? 'bg-success' : 'bg-secondary'}">
+                        ${pub.es_aviso_principal ? 'Activo' : 'Inactivo'}
+                    </span>
+                </td>
+                <td>
+                    <button class="btn btn-sm btn-outline-primary btn-editar me-1" data-id="${pub.id}">
                         <i class="bi bi-pencil"></i>
                     </button>
-                    <button class="btn btn-sm btn-outline-danger btn-eliminar" data-id="${horario.id}">
+                    <button class="btn btn-sm btn-outline-danger btn-eliminar" data-id="${pub.id}">
                         <i class="bi bi-trash"></i>
                     </button>
                 </td>
@@ -91,16 +101,38 @@ export async function cargarHorariosUI(container) {
         `).join('');
 
         // Inicializar DataTable
-        $('#tablaHorarios').DataTable({
+        const tabla = $('#tablaHorarios').DataTable({
             language: {
                 url: 'https://cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json'
             },
             responsive: true,
-            order: [[0, 'asc']]
+            order: [[1, 'desc']]
         });
 
-        // Configurar los eventos del modal
-        configurarModalHorario();
+        // Configurar eventos
+        document.getElementById('btnNuevoHorario').addEventListener('click', () => {
+            mostrarModalHorario({
+                modo: 'crear'
+            });
+        });
+
+        // Configurar eventos de botones de acciones
+        tbody.addEventListener('click', (e) => {
+            const boton = e.target.closest('button');
+            if (!boton) return;
+
+            const id = boton.dataset.id;
+            const publicacion = publicaciones.find(p => p.id === id);
+
+            if (boton.classList.contains('btn-editar')) {
+                mostrarModalHorario({
+                    modo: 'editar',
+                    ...publicacion
+                });
+            } else if (boton.classList.contains('btn-eliminar')) {
+                confirmarEliminarHorario(id);
+            }
+        });
 
     } catch (error) {
         console.error('[Horarios UI] Error al cargar interfaz:', error);
@@ -226,43 +258,115 @@ function formatearHora(hora) {
     return hora.slice(0, 5); // Mostrar solo HH:MM
 }
 
-// Función para guardar un horario
+// Función para mostrar el modal de horario
+function mostrarModalHorario(datos) {
+    const modal = new bootstrap.Modal(document.getElementById('modalHorario'));
+    const form = document.getElementById('formHorario');
+    
+    // Configurar formulario con los datos de la publicación como ejemplo
+    form.horarioId.value = datos.id || '';
+    form.titulo.value = datos.titulo || '';
+    form.contenido.value = datos.contenido || '';
+    form.fechaPublicacion.value = formatearFecha(datos.fecha_publicacion || new Date(), false);
+    form.esAvisoPrincipal.checked = datos.es_aviso_principal || false;
+
+    // Configurar título del modal
+    document.getElementById('modalHorarioLabel').textContent = 
+        datos.modo === 'crear' ? 'Nuevo Horario' : 'Editar Horario';
+
+    // Mostrar/ocultar botón eliminar
+    document.getElementById('btnEliminarHorario').style.display = 
+        datos.modo === 'editar' ? 'block' : 'none';
+
+    // Configurar eventos
+    document.getElementById('btnGuardarHorario').onclick = async (e) => {
+        e.preventDefault();
+        if (!form.checkValidity()) {
+            form.classList.add('was-validated');
+            return;
+        }
+        await guardarHorario(form);
+    };
+
+    document.getElementById('btnEliminarHorario').onclick = () => {
+        if (datos.id) {
+            confirmarEliminarHorario(datos.id);
+        }
+    };
+
+    // Resetear validación
+    form.classList.remove('was-validated');
+
+    // Mostrar modal
+    modal.show();
+}
+
+// Función para guardar horario
 async function guardarHorario(form) {
     try {
         console.log('[Horarios UI] Iniciando guardado de horario...');
         
-        // Obtener datos del formulario
-        const datos = {
-            curso: form.curso.value.trim(),
-            anio: new Date().getFullYear()
-        };
+        // Obtener el usuario actual
+        const { data: { session } } = await supabase.auth.getSession();
+        console.log('[Horarios UI] Sesión de usuario:', session ? {
+            id: session.user.id,
+            email: session.user.email
+        } : null);
 
-        console.log('[Horarios UI] Datos del horario:', datos);
-
-        // Crear horario
-        const { data, error } = await supabase
-            .from('horario')
-            .insert([datos])
-            .select();
-
-        if (error) {
-            console.error('[Horarios UI] Error al guardar horario:', error);
-            mostrarError('Error al guardar el horario');
-            return;
+        if (!session) {
+            throw new Error('Debe iniciar sesión para crear un horario');
         }
 
-        console.log('[Horarios UI] Horario guardado:', data);
-        mostrarExito('Horario guardado exitosamente');
+        console.log('[Horarios UI] Preparando datos del horario...');
+        const horario = {
+            titulo: form.titulo.value.trim(),
+            fecha_publicacion: form.fechaPublicacion.value,
+            es_aviso_principal: form.esAvisoPrincipal.checked
+        };
 
-        // Cerrar modal y recargar datos
+        const { data, error } = await supabase
+            .from('horario')
+            .insert([horario])
+            .select();
+
+        if (error) throw error;
+
+        mostrarExito('Horario guardado exitosamente');
+        
+        // Cerrar modal y recargar
         const modal = bootstrap.Modal.getInstance(document.getElementById('modalHorario'));
         modal.hide();
-        
-        // Recargar la tabla
-        await cargarHorariosUI(document.getElementById('mainContent'));
+        cargarHorariosUI(document.getElementById('mainContent'));
 
     } catch (error) {
         console.error('[Horarios UI] Error al guardar horario:', error);
-        mostrarError('Error al guardar el horario');
+        mostrarError(error.message);
     }
+}
+
+// Función para confirmar eliminación
+function confirmarEliminarHorario(id) {
+    if (confirm('¿Está seguro de eliminar este horario?')) {
+        supabase
+            .from('horario')
+            .delete()
+            .eq('id', id)
+            .then(() => {
+                mostrarExito('Horario eliminado exitosamente');
+                cargarHorariosUI(document.getElementById('mainContent'));
+            })
+            .catch(error => {
+                console.error('[Horarios UI] Error al eliminar horario:', error);
+                mostrarError('Error al eliminar el horario');
+            });
+    }
+}
+
+// Función auxiliar para formatear fechas
+function formatearFecha(fecha, incluirHora = false) {
+    if (!fecha) return '';
+    const f = new Date(fecha);
+    return incluirHora ? 
+        f.toISOString().slice(0, 16) : // Con hora (YYYY-MM-DDTHH:mm)
+        f.toISOString().slice(0, 10);  // Solo fecha (YYYY-MM-DD)
 }
