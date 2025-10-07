@@ -82,55 +82,25 @@ export async function obtenerHorariosPorCurso(curso, anio = new Date().getFullYe
 
 // Función para obtener la lista de cursos disponibles
 export async function obtenerCursos(anio = new Date().getFullYear()) {
-    console.log(`[Horarios] Obteniendo lista de cursos del año ${anio}`);
     try {
-        // Verificar estado de autenticación
-        const { data: { user }, error: authError } = await supabase.auth.getUser();
-        console.log('[Horarios] Estado de autenticación:', { user, error: authError });
-
-        console.log('[Horarios] Ejecutando consulta simple a la tabla horario...');
-        console.log('[Horarios] URL de Supabase:', supabase.supabaseUrl);
-        
         const { data, error } = await supabase
             .from('horario')
-            .select('*')
-            .order('curso');
-            
-        console.log('[Horarios] Resultados de la tabla horario:', {
-            datos: data,
-            error: error,
-            tipoError: error ? error.constructor.name : null,
-            mensajeError: error ? error.message : null,
-            codigoError: error ? error.code : null
-        });
+            .select('id, curso, anio')
+            .eq('anio', anio)
+            .order('curso', { ascending: true });
 
         if (error) {
-            console.error('[Horarios] Error detallado al obtener horarios:', {
-                mensaje: error.message,
-                codigo: error.code,
-                detalles: error.details,
-                sugerencia: error.hint
-            });
+            console.error('[Horarios] Error al consultar horarios:', error);
             throw error;
         }
 
-        if (!data) {
-            console.log('[Horarios] No se encontraron datos en la tabla horario');
-            return [];
-        }
-
-        console.log('[Horarios] Datos obtenidos exitosamente:', {
-            cantidad: data.length,
-            primeros3: data.slice(0, 3)
-        });
+        // Extraer solo los cursos únicos
+        const cursos = [...new Set(data.map(h => h.curso))];
+        console.log('[Horarios] Cursos encontrados:', cursos);
         
-        return data;
+        return cursos;
     } catch (error) {
-        console.error('[Horarios] Error detallado en obtenerCursos:', {
-            tipo: error.constructor.name,
-            mensaje: error.message,
-            stack: error.stack
-        });
-        throw error;
+        console.error('[Horarios] Error en obtenerCursos:', error.message);
+        return [];
     }
 }
