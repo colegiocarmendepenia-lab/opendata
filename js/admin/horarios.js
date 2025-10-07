@@ -84,52 +84,53 @@ export async function obtenerHorariosPorCurso(curso, anio = new Date().getFullYe
 export async function obtenerCursos(anio = new Date().getFullYear()) {
     console.log(`[Horarios] Obteniendo lista de cursos del año ${anio}`);
     try {
-        console.log('[Horarios] Ejecutando consulta a la tabla horario...');
+        // Verificar estado de autenticación
+        const { data: { user }, error: authError } = await supabase.auth.getUser();
+        console.log('[Horarios] Estado de autenticación:', { user, error: authError });
+
+        console.log('[Horarios] Ejecutando consulta simple a la tabla horario...');
+        console.log('[Horarios] URL de Supabase:', supabase.supabaseUrl);
         
-        // Ejecutar la consulta simple
-        const { data: todosLosRegistros, error: errorTodos } = await supabase
-            .from('horario')
-            .select('*')
-            .eq('anio', anio)
-            .order('curso');
-            
-        console.log('[Horarios] Todos los registros en horario:', todosLosRegistros, 'Error:', errorTodos);
-        
-        // Ahora hacemos la consulta específica
         const { data, error } = await supabase
             .from('horario')
-            .select('curso')
-            .eq('anio', anio)
-            .not('curso', 'is', null)
+            .select('*')
             .order('curso');
+            
+        console.log('[Horarios] Resultados de la tabla horario:', {
+            datos: data,
+            error: error,
+            tipoError: error ? error.constructor.name : null,
+            mensajeError: error ? error.message : null,
+            codigoError: error ? error.code : null
+        });
 
         if (error) {
-            console.error('[Horarios] Error al obtener cursos:', error);
-            console.error('[Horarios] Detalles adicionales:', {
-                codigo: error.code,
+            console.error('[Horarios] Error detallado al obtener horarios:', {
                 mensaje: error.message,
+                codigo: error.code,
                 detalles: error.details,
-                hint: error.hint
+                sugerencia: error.hint
             });
             throw error;
         }
 
-        console.log('[Horarios] Datos obtenidos de la tabla horario:', data);
-        // Filtrar cursos nulos y duplicados
-        const cursos = [...new Set(data.map(h => h.curso).filter(Boolean))];
-        console.log('[Horarios] Lista de cursos procesada:', cursos);
-        
-        if (cursos.length === 0) {
-            const mensaje = 'No se encontraron cursos en la base de datos. ' + 
-                          (permisoError ? 'Error de permisos: ' + permisoError.message : 
-                           'Verifique que tenga los permisos necesarios.');
-            console.warn('[Horarios] ' + mensaje);
-            throw new Error(mensaje);
+        if (!data) {
+            console.log('[Horarios] No se encontraron datos en la tabla horario');
+            return [];
         }
+
+        console.log('[Horarios] Datos obtenidos exitosamente:', {
+            cantidad: data.length,
+            primeros3: data.slice(0, 3)
+        });
         
-        return cursos;
+        return data;
     } catch (error) {
-        console.error('[Horarios] Error al obtener cursos:', error);
+        console.error('[Horarios] Error detallado en obtenerCursos:', {
+            tipo: error.constructor.name,
+            mensaje: error.message,
+            stack: error.stack
+        });
         throw error;
     }
 }
