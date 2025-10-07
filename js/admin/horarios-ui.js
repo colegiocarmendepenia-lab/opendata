@@ -4,7 +4,7 @@ import { supabase, mostrarError, mostrarExito } from '../auth.js';
 console.log('[Horarios UI] Iniciando módulo de interfaz de horarios...');
 
 // Versión del módulo UI
-const VERSION = '1.0.33';
+const VERSION = '1.0.34';
 
 // Función para cargar la interfaz de horarios
 export async function cargarHorariosUI(container) {
@@ -32,6 +32,42 @@ export async function cargarHorariosUI(container) {
                             </thead>
                             <tbody></tbody>
                         </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal de Detalle de Horario -->
+            <div class="modal fade" id="modalDetalleHorario" tabindex="-1">
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="detalleHorarioLabel">Detalle del Horario</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="table-responsive">
+                                <table class="table" id="tablaDetalleHorario">
+                                    <thead>
+                                        <tr>
+                                            <th>Día</th>
+                                            <th>Horario</th>
+                                            <th>Materia</th>
+                                            <th>Profesor</th>
+                                            <th>Nivel</th>
+                                            <th>Turno</th>
+                                            <th>Acciones</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody></tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-primary" id="btnNuevoDetalle">
+                                <i class="bi bi-plus-circle"></i> Agregar Detalle
+                            </button>
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                        </div>
                     </div>
                 </div>
             </div>
