@@ -1,17 +1,12 @@
-// M�dulo para la interfa                                <tr>
-                                    <th>Curso</th>
-                                    <th>Año</th>
-                                    <th>Fecha Creación</th>
-                                    <th>Acciones</th>
-                                </tr>suario de horarios
+﻿// Módulo para la interfaz de usuario de horarios
 import { supabase, mostrarError, mostrarExito } from '../auth.js';
 
-console.log('[Horarios UI] Iniciando m�dulo de interfaz de horarios...');
+console.log('[Horarios UI] Iniciando módulo de interfaz de horarios...');
 
-// Versi�n del m�dulo UI
+// Versión del módulo UI
 const VERSION = '1.0.32';
 
-// Funci�n para cargar la interfaz de horarios
+// Función para cargar la interfaz de horarios
 export async function cargarHorariosUI(container) {
     console.log(`[Horarios UI v${VERSION}] Iniciando carga de horarios...`);
     try {
@@ -30,8 +25,8 @@ export async function cargarHorariosUI(container) {
                             <thead>
                                 <tr>
                                     <th>Curso</th>
-                                    <th>D�a</th>
-                                    <th>Turno</th>
+                                    <th>Año</th>
+                                    <th>Fecha Creación</th>
                                     <th>Acciones</th>
                                 </tr>
                             </thead>
@@ -114,7 +109,7 @@ export async function cargarHorariosUI(container) {
     }
 }
 
-// Funci�n para mostrar el modal de horario
+// Función para mostrar el modal de horario
 function mostrarModalHorario(datos) {
     const modal = new bootstrap.Modal(document.getElementById('modalHorario'));
     const form = document.getElementById('formHorario');
@@ -124,11 +119,11 @@ function mostrarModalHorario(datos) {
     form.curso.value = datos.curso || '';
     form.anio.value = datos.anio || new Date().getFullYear();
 
-    // Configurar t�tulo del modal
+    // Configurar título del modal
     document.getElementById('modalHorarioLabel').textContent = 
         datos.modo === 'crear' ? 'Nuevo Horario' : 'Editar Horario';
 
-    // Mostrar/ocultar bot�n eliminar
+    // Mostrar/ocultar botón eliminar
     document.getElementById('btnEliminarHorario').style.display = 
         datos.modo === 'editar' ? 'block' : 'none';
 
@@ -148,27 +143,27 @@ function mostrarModalHorario(datos) {
         }
     };
 
-    // Resetear validaci�n
+    // Resetear validación
     form.classList.remove('was-validated');
 
     // Mostrar modal
     modal.show();
 }
 
-// Funci�n para guardar horario
+// Función para guardar horario
 async function guardarHorario(form) {
     try {
         console.log('[Horarios UI] Iniciando guardado de horario...');
         
         // Obtener el usuario actual
         const { data: { session } } = await supabase.auth.getSession();
-        console.log('[Horarios UI] Sesi�n de usuario:', session ? {
+        console.log('[Horarios UI] Sesión de usuario:', session ? {
             id: session.user.id,
             email: session.user.email
         } : null);
 
         if (!session) {
-            throw new Error('Debe iniciar sesi�n para crear un horario');
+            throw new Error('Debe iniciar sesión para crear un horario');
         }
 
         console.log('[Horarios UI] Preparando datos del horario...');
@@ -204,9 +199,9 @@ async function guardarHorario(form) {
     }
 }
 
-// Funci�n para confirmar eliminaci�n
+// Función para confirmar eliminación
 function confirmarEliminarHorario(id) {
-    if (confirm('�Est� seguro de eliminar este horario?')) {
+    if (confirm('¿Está seguro de eliminar este horario?')) {
         supabase
             .from('horario')
             .delete()
