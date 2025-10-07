@@ -4,7 +4,7 @@ import { supabase, mostrarError, mostrarExito } from '../auth.js';
 console.log('[Horarios UI] Iniciando módulo de interfaz de horarios...');
 
 // Versión del módulo UI
-const VERSION = '1.0.34';
+const VERSION = '1.0.35';
 
 // Función para cargar la interfaz de horarios
 export async function cargarHorariosUI(container) {
@@ -32,6 +32,40 @@ export async function cargarHorariosUI(container) {
                             </thead>
                             <tbody></tbody>
                         </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal de Estudiantes -->
+            <div class="modal fade" id="modalEstudiantes" tabindex="-1">
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="estudiantesLabel">Estudiantes Asignados</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="table-responsive">
+                                <table class="table" id="tablaEstudiantes">
+                                    <thead>
+                                        <tr>
+                                            <th>Código</th>
+                                            <th>Grado</th>
+                                            <th>Sección</th>
+                                            <th>Nombre</th>
+                                            <th>Acciones</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody></tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-primary" id="btnAsignarEstudiante">
+                                <i class="bi bi-plus-circle"></i> Asignar Estudiante
+                            </button>
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -98,6 +132,9 @@ export async function cargarHorariosUI(container) {
                     <button class="btn btn-sm btn-outline-info btn-ver-detalle me-1" data-id="${horario.id}" title="Ver detalle">
                         <i class="bi bi-eye"></i>
                     </button>
+                    <button class="btn btn-sm btn-outline-success btn-ver-estudiantes me-1" data-id="${horario.id}" title="Ver estudiantes">
+                        <i class="bi bi-people"></i>
+                    </button>
                     <button class="btn btn-sm btn-outline-primary btn-editar me-1" data-id="${horario.id}" title="Editar">
                         <i class="bi bi-pencil"></i>
                     </button>
@@ -147,6 +184,8 @@ export async function cargarHorariosUI(container) {
                 confirmarEliminarHorario(id);
             } else if (boton.classList.contains('btn-ver-detalle')) {
                 await mostrarDetalleHorario(horario);
+            } else if (boton.classList.contains('btn-ver-estudiantes')) {
+                await mostrarEstudiantesHorario(horario);
             }
         });
 
@@ -342,5 +381,99 @@ async function mostrarDetalleHorario(horario) {
     } catch (error) {
         console.error('[Horarios UI] Error al cargar detalles:', error);
         mostrarError('Error al cargar los detalles del horario');
+    }
+}
+
+// Función para mostrar los estudiantes asignados al horario
+async function mostrarEstudiantesHorario(horario) {
+    try {
+        if (!horario || !horario.id) {
+            throw new Error('Datos del horario no válidos');
+        }
+        console.log('[Horarios UI] Cargando estudiantes del horario:', horario);
+
+        // Obtener los estudiantes asignados
+        const { data: estudiantes, error } = await supabase
+            .from('estudiantes')
+            .select(`
+                id,
+                codigo_estudiante,
+                grado,
+                seccion,
+                personas (
+                    id,
+                    nombres,
+                    apellidos
+                )
+            `)
+            .eq('id_horario', horario.id)
+            .order('grado', { ascending: true })
+            .order('seccion', { ascending: true });
+
+        if (error) throw error;
+
+        console.log('[Horarios UI] Estudiantes obtenidos:', estudiantes);
+
+        // Preparar el contenido del modal
+        const modal = new bootstrap.Modal(document.getElementById('modalEstudiantes'));
+        const tbody = document.querySelector('#tablaEstudiantes tbody');
+        
+        document.getElementById('estudiantesLabel').textContent = 
+            `Estudiantes Asignados al Horario - ${horario.curso} (${horario.anio})`;
+
+        tbody.innerHTML = estudiantes.map(estudiante => `
+            <tr>
+                <td>${estudiante.codigo_estudiante}</td>
+                <td>${estudiante.grado}</td>
+                <td>${estudiante.seccion}</td>
+                <td>${estudiante.personas ? 
+                    `${estudiante.personas.nombres} ${estudiante.personas.apellidos}` : 
+                    'No especificado'}</td>
+                <td>
+                    <button class="btn btn-sm btn-outline-danger btn-desasignar-estudiante" 
+                            data-id="${estudiante.id}" 
+                            title="Desasignar estudiante">
+                        <i class="bi bi-person-dash"></i>
+                    </button>
+                </td>
+            </tr>
+        `).join('') || '<tr><td colspan="5" class="text-center">No hay estudiantes asignados</td></tr>';
+
+        // Configurar eventos de los botones
+        tbody.addEventListener('click', async (e) => {
+            const boton = e.target.closest('.btn-desasignar-estudiante');
+            if (boton) {
+                const estudianteId = boton.dataset.id;
+                if (confirm('¿Está seguro de desasignar este estudiante del horario?')) {
+                    try {
+                        const { error } = await supabase
+                            .from('estudiantes')
+                            .update({ id_horario: null })
+                            .eq('id', estudianteId);
+
+                        if (error) throw error;
+                        
+                        mostrarExito('Estudiante desasignado exitosamente');
+                        await mostrarEstudiantesHorario(horario);
+                    } catch (error) {
+                        console.error('[Horarios UI] Error al desasignar estudiante:', error);
+                        mostrarError('Error al desasignar el estudiante');
+                    }
+                }
+            }
+        });
+
+        // Configurar el botón para asignar nuevo estudiante
+        document.getElementById('btnAsignarEstudiante').onclick = () => {
+            // TODO: Implementar la funcionalidad para asignar estudiantes
+            alert('Funcionalidad en desarrollo');
+        };
+
+        // Mostrar el modal
+        modal.show();
+
+    } catch (error) {
+        console.error('[Horarios UI] Error al cargar estudiantes:', error);
+        mostrarError('Error al cargar los estudiantes del horario');
     }
 }
