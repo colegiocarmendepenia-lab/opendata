@@ -1,7 +1,8 @@
 // Módulo para gestionar los horarios
 import { supabase } from '../auth.js';
 
-console.log('[Horarios] Iniciando módulo de servicio de horarios...');
+const VERSION = '1.0.32';
+console.log(`[Horarios v${VERSION}] Iniciando módulo de servicio de horarios...`);
 console.log('[Horarios] Instancia de Supabase disponible:', !!supabase);
 
 // Función para obtener los horarios por curso
