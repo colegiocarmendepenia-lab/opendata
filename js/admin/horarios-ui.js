@@ -4,7 +4,7 @@ import { supabase, mostrarError, mostrarExito } from '../auth.js';
 console.log('[Horarios UI] Iniciando módulo de interfaz de horarios...');
 
 // Versión del módulo UI
-const VERSION = '1.0.32';
+const VERSION = '1.0.33';
 
 // Función para cargar la interfaz de horarios
 export async function cargarHorariosUI(container) {
@@ -94,7 +94,13 @@ export async function cargarHorariosUI(container) {
             if (!boton) return;
 
             const id = boton.dataset.id;
-            const horario = horarios.find(h => h.id === id);
+            const horario = horarios.find(h => h.id.toString() === id);
+
+            if (!horario) {
+                console.error('[Horarios UI] No se encontró el horario con ID:', id);
+                mostrarError('Error: No se encontró el horario');
+                return;
+            }
 
             if (boton.classList.contains('btn-editar')) {
                 mostrarModalHorario({
@@ -225,6 +231,9 @@ function confirmarEliminarHorario(id) {
 // Función para mostrar el detalle del horario
 async function mostrarDetalleHorario(horario) {
     try {
+        if (!horario || !horario.id) {
+            throw new Error('Datos del horario no válidos');
+        }
         console.log('[Horarios UI] Cargando detalle del horario:', horario);
 
         // Obtener los detalles del horario_escolar
@@ -240,7 +249,7 @@ async function mostrarDetalleHorario(horario) {
                 nivel,
                 turno
             `)
-            .eq('horario_id', horario.id)
+            .eq('id_horario', horario.id)
             .order('dia_semana', { ascending: true })
             .order('hora_inicio', { ascending: true });
 
