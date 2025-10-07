@@ -8,10 +8,32 @@ console.log('[Horarios] Instancia de Supabase disponible:', !!supabase);
 async function verificarPermisos() {
     console.log('[Horarios] Verificando permisos...');
     try {
+        // Obtener información del usuario actual
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) {
+            console.error('[Horarios] No hay sesión activa');
+            return { tienePermisoInsertar: false, error: new Error('No hay sesión activa') };
+        }
+
+        // Obtener el perfil del usuario
+        const { data: perfil, error: perfilError } = await supabase
+            .from('usuarios_con_perfiles')
+            .select('*')
+            .eq('id', session.user.id)
+            .single();
+
+        console.log('[Horarios] Perfil del usuario:', perfil);
+        
+        if (perfilError) {
+            console.error('[Horarios] Error al obtener perfil:', perfilError);
+            return { tienePermisoInsertar: false, error: perfilError };
+        }
+
         // Intentar insertar un registro de prueba
         const registroPrueba = {
             curso: '_test_',
-            anio: 2025
+            anio: 2025,
+            created_by: session.user.id
         };
         
         console.log('[Horarios] Intentando insertar registro de prueba:', registroPrueba);
@@ -133,10 +155,39 @@ export async function obtenerCursos(anio = new Date().getFullYear()) {
         console.log('[Horarios] Resultado verificación de permisos:', { tienePermisoInsertar, error: permisoError });
         console.log('[Horarios] Ejecutando consulta a la tabla horario...');
         
-        // Primero intentemos obtener todos los registros para ver qué hay
-        const { data: todosLosRegistros, error: errorTodos } = await supabase
-            .from('horario')
-            .select('*');
+        // Obtener información del usuario actual
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) {
+            throw new Error('No hay sesión activa');
+        }
+
+        // Obtener el perfil del usuario
+        const { data: perfil, error: perfilError } = await supabase
+            .from('usuarios_con_perfiles')
+            .select('*')
+            .eq('id', session.user.id)
+            .single();
+
+        if (perfilError) {
+            console.error('[Horarios] Error al obtener perfil:', perfilError);
+            throw perfilError;
+        }
+
+        console.log('[Horarios] Perfil del usuario:', perfil);
+        
+        // Construir la consulta según el perfil
+        let query = supabase.from('horario').select('*');
+        
+        // Si es coordinador (perfil_id = 2), puede ver todos los horarios
+        // Si es docente (perfil_id = 3), solo ve los horarios asignados
+        // Si es otro perfil, aplicar restricciones según sea necesario
+        if (perfil.perfil_id !== 2) {
+            console.log('[Horarios] Usuario no es coordinador, aplicando filtros...');
+            query = query.eq('created_by', session.user.id);
+        }
+
+        // Ejecutar la consulta
+        const { data: todosLosRegistros, error: errorTodos } = await query;
         console.log('[Horarios] Todos los registros en horario:', todosLosRegistros, 'Error:', errorTodos);
         
         // Ahora hacemos la consulta específica
