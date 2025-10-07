@@ -1,12 +1,17 @@
-// Módulo para la interfaz de usuario de horarios
+// Mï¿½dulo para la interfa                                <tr>
+                                    <th>Curso</th>
+                                    <th>AÃ±o</th>
+                                    <th>Fecha CreaciÃ³n</th>
+                                    <th>Acciones</th>
+                                </tr>suario de horarios
 import { supabase, mostrarError, mostrarExito } from '../auth.js';
 
-console.log('[Horarios UI] Iniciando módulo de interfaz de horarios...');
+console.log('[Horarios UI] Iniciando mï¿½dulo de interfaz de horarios...');
 
-// Versión del módulo UI
+// Versiï¿½n del mï¿½dulo UI
 const VERSION = '1.0.32';
 
-// Función para cargar la interfaz de horarios
+// Funciï¿½n para cargar la interfaz de horarios
 export async function cargarHorariosUI(container) {
     console.log(`[Horarios UI v${VERSION}] Iniciando carga de horarios...`);
     try {
@@ -25,7 +30,7 @@ export async function cargarHorariosUI(container) {
                             <thead>
                                 <tr>
                                     <th>Curso</th>
-                                    <th>Día</th>
+                                    <th>Dï¿½a</th>
                                     <th>Turno</th>
                                     <th>Acciones</th>
                                 </tr>
@@ -52,10 +57,10 @@ export async function cargarHorariosUI(container) {
         tbody.innerHTML = horarios.map(horario => `
             <tr>
                 <td>${horario.curso || 'Sin curso'}</td>
-                <td>${horario.dia || 'No especificado'}</td>
+                <td>${horario.anio || new Date().getFullYear()}</td>
                 <td>
                     <span class="badge bg-primary">
-                        ${horario.turno || 'No especificado'}
+                        ${new Date(horario.created_at).toLocaleDateString()}
                     </span>
                 </td>
                 <td>
@@ -109,7 +114,7 @@ export async function cargarHorariosUI(container) {
     }
 }
 
-// Función para mostrar el modal de horario
+// Funciï¿½n para mostrar el modal de horario
 function mostrarModalHorario(datos) {
     const modal = new bootstrap.Modal(document.getElementById('modalHorario'));
     const form = document.getElementById('formHorario');
@@ -117,14 +122,13 @@ function mostrarModalHorario(datos) {
     // Configurar formulario
     form.horarioId.value = datos.id || '';
     form.curso.value = datos.curso || '';
-    form.dia.value = datos.dia || '';
-    form.turno.value = datos.turno || '';
+    form.anio.value = datos.anio || new Date().getFullYear();
 
-    // Configurar título del modal
+    // Configurar tï¿½tulo del modal
     document.getElementById('modalHorarioLabel').textContent = 
         datos.modo === 'crear' ? 'Nuevo Horario' : 'Editar Horario';
 
-    // Mostrar/ocultar botón eliminar
+    // Mostrar/ocultar botï¿½n eliminar
     document.getElementById('btnEliminarHorario').style.display = 
         datos.modo === 'editar' ? 'block' : 'none';
 
@@ -144,34 +148,34 @@ function mostrarModalHorario(datos) {
         }
     };
 
-    // Resetear validación
+    // Resetear validaciï¿½n
     form.classList.remove('was-validated');
 
     // Mostrar modal
     modal.show();
 }
 
-// Función para guardar horario
+// Funciï¿½n para guardar horario
 async function guardarHorario(form) {
     try {
         console.log('[Horarios UI] Iniciando guardado de horario...');
         
         // Obtener el usuario actual
         const { data: { session } } = await supabase.auth.getSession();
-        console.log('[Horarios UI] Sesión de usuario:', session ? {
+        console.log('[Horarios UI] Sesiï¿½n de usuario:', session ? {
             id: session.user.id,
             email: session.user.email
         } : null);
 
         if (!session) {
-            throw new Error('Debe iniciar sesión para crear un horario');
+            throw new Error('Debe iniciar sesiï¿½n para crear un horario');
         }
 
         console.log('[Horarios UI] Preparando datos del horario...');
         const horario = {
             curso: form.curso.value.trim(),
-            dia: form.dia.value.trim(),
-            turno: form.turno.value.trim()
+            anio: parseInt(form.anio.value) || new Date().getFullYear(),
+            created_by: session.user.id
         };
 
         const { data, error } = form.horarioId.value ? 
@@ -200,9 +204,9 @@ async function guardarHorario(form) {
     }
 }
 
-// Función para confirmar eliminación
+// Funciï¿½n para confirmar eliminaciï¿½n
 function confirmarEliminarHorario(id) {
-    if (confirm('¿Está seguro de eliminar este horario?')) {
+    if (confirm('ï¿½Estï¿½ seguro de eliminar este horario?')) {
         supabase
             .from('horario')
             .delete()
