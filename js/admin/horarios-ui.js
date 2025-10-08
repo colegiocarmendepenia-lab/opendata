@@ -4,7 +4,7 @@ import { supabase, mostrarError, mostrarExito } from '../auth.js';
 console.log('[Horarios UI] Iniciando módulo de interfaz de horarios...');
 
 // Versión del módulo UI
-const VERSION = '1.0.35';
+const VERSION = '1.0.36';
 
 // Función para cargar la interfaz de horarios
 export async function cargarHorariosUI(container) {
@@ -395,20 +395,10 @@ async function mostrarEstudiantesHorario(horario) {
         // Obtener los estudiantes asignados
         const { data: estudiantes, error } = await supabase
             .from('estudiantes')
-            .select(`
-                id,
-                codigo_estudiante,
-                grado,
-                seccion,
-                personas (
-                    id,
-                    nombres,
-                    apellidos
-                )
-            `)
+            .select('*, persona:persona_id(id, nombres, apellidos)')
             .eq('id_horario', horario.id)
-            .order('grado', { ascending: true })
-            .order('seccion', { ascending: true });
+            .order('grado')
+            .order('seccion');
 
         if (error) throw error;
 
@@ -426,8 +416,8 @@ async function mostrarEstudiantesHorario(horario) {
                 <td>${estudiante.codigo_estudiante}</td>
                 <td>${estudiante.grado}</td>
                 <td>${estudiante.seccion}</td>
-                <td>${estudiante.personas ? 
-                    `${estudiante.personas.nombres} ${estudiante.personas.apellidos}` : 
+                <td>${estudiante.persona ? 
+                    `${estudiante.persona.nombres} ${estudiante.persona.apellidos}` : 
                     'No especificado'}</td>
                 <td>
                     <button class="btn btn-sm btn-outline-danger btn-desasignar-estudiante" 
