@@ -158,3 +158,39 @@
 .custom-scroll::-webkit-scrollbar-thumb:hover {
     background: #555;
 }
+
+/* Estilos para el calendario */
+.fc-event {
+    cursor: pointer;
+    border: none !important;
+}
+
+/* Colores para tipos de eventos */
+.bg-purple {
+    background-color: #6f42c1 !important;
+    color: white !important;
+}
+
+.bg-orange {
+    background-color: #fd7e14 !important;
+    color: white !important;
+}
+
+/* Asegurar que el modal esté por encima de otros elementos */
+.modal {
+    z-index: 1060 !important;
+}
+
+/* Estilos para el modal del calendario */
+#modalEvento {
+    z-index: 1070 !important;
+}
+
+#modalEvento .modal-dialog {
+    max-width: 600px;
+}
+
+#modalEvento .modal-content {
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}

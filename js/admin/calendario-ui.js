@@ -31,6 +31,56 @@ export async function cargarEventosCalendario(container) {
                     <div id="calendario"></div>
                 </div>
             </div>
+
+            <!-- Modal para Eventos -->
+            <div class="modal fade" id="modalEvento" tabindex="-1" aria-labelledby="modalEventoLabel" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="modalEventoLabel">Nuevo Evento</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <form id="formEvento">
+                            <div class="modal-body">
+                                <input type="hidden" id="eventoId" name="eventoId">
+                                <div class="mb-3">
+                                    <label for="eventoTitulo" class="form-label">Título</label>
+                                    <input type="text" class="form-control" id="eventoTitulo" name="eventoTitulo" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="eventoDescripcion" class="form-label">Descripción</label>
+                                    <textarea class="form-control" id="eventoDescripcion" name="eventoDescripcion" rows="3"></textarea>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="tipoEvento" class="form-label">Tipo de Evento</label>
+                                    <select class="form-select" id="tipoEvento" name="tipoEvento" required>
+                                        <option value="actividad">Actividad</option>
+                                        <option value="clase">Clase</option>
+                                        <option value="evaluacion">Evaluación</option>
+                                        <option value="reunion">Reunión</option>
+                                        <option value="feriado">Feriado</option>
+                                        <option value="academico">Académico</option>
+                                        <option value="conmemorativo">Conmemorativo</option>
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="eventoInicio" class="form-label">Fecha de Inicio</label>
+                                    <input type="datetime-local" class="form-control" id="eventoInicio" name="eventoInicio" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="eventoFin" class="form-label">Fecha de Fin</label>
+                                    <input type="datetime-local" class="form-control" id="eventoFin" name="eventoFin" required>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-danger me-auto" id="btnEliminarEvento">Eliminar</button>
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                <button type="submit" class="btn btn-primary">Guardar</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
         `;
 
         // Cargar eventos
@@ -129,9 +179,24 @@ export async function cargarEventosCalendario(container) {
 
 // Función para mostrar el modal de evento
 function mostrarModalEvento(datos) {
-    const modal = new bootstrap.Modal(document.getElementById('modalEvento'));
+    const modalElement = document.getElementById('modalEvento');
+    if (!modalElement) {
+        console.error('Modal no encontrado en el DOM');
+        return;
+    }
+
+    let modal = bootstrap.Modal.getInstance(modalElement);
+    if (!modal) {
+        modal = new bootstrap.Modal(modalElement);
+    }
+
     const form = document.getElementById('formEvento');
     const titulo = document.getElementById('modalEventoLabel');
+    
+    if (!form || !titulo) {
+        console.error('Elementos del formulario no encontrados');
+        return;
+    }
     
     // Configurar título del modal
     titulo.textContent = datos.modo === 'crear' ? 'Nuevo Evento' : 'Editar Evento';
@@ -230,6 +295,10 @@ function obtenerClaseEvento(tipo) {
             return 'bg-success';
         case 'feriado':
             return 'bg-warning';
+        case 'academico':
+            return 'bg-purple';
+        case 'conmemorativo':
+            return 'bg-orange';
         default:
             return 'bg-secondary';
     }
@@ -239,7 +308,12 @@ function obtenerClaseEvento(tipo) {
 function formatearFecha(fecha, incluirHora = true) {
     if (!fecha) return '';
     const f = new Date(fecha);
+    
+    // Asegurarse de que la fecha esté en la zona horaria local
+    const offset = f.getTimezoneOffset();
+    const fLocal = new Date(f.getTime() - (offset * 60 * 1000));
+    
     return incluirHora ? 
-        f.toISOString().slice(0, 16) : // Con hora (YYYY-MM-DDTHH:mm)
-        f.toISOString().slice(0, 10);  // Solo fecha (YYYY-MM-DD)
+        fLocal.toISOString().slice(0, 16) : // Con hora (YYYY-MM-DDTHH:mm)
+        fLocal.toISOString().slice(0, 10);  // Solo fecha (YYYY-MM-DD)
 }

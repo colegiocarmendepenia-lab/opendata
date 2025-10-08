@@ -55,7 +55,7 @@ async function inicializarDashboard() {
     try {
         const { data: { session } } = await supabase.auth.getSession();
         if (!session) {
-            window.location.href = '/login.html';
+            window.location.href = '../login.html';
             return;
         }
 
@@ -491,9 +491,12 @@ async function cargarAsistencias(container, puedeEditar) {
 // Función para cerrar sesión
 async function handleLogout() {
     try {
-        await supabase.auth.signOut();
-        // Usar ruta relativa desde la ubicación actual
-        window.location.href = '../../login.html';
+        const { error } = await supabase.auth.signOut();
+        if (error) throw error;
+        
+        // Usar la ubicación base del sitio
+        const baseUrl = window.location.pathname.split('/admin/')[0];
+        window.location.href = `${baseUrl}/login.html`;
     } catch (error) {
         console.error('Error al cerrar sesión:', error);
         mostrarError('Error al cerrar sesión');
