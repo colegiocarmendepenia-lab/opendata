@@ -40,19 +40,10 @@ export async function crearPublicacion(publicacion) {
         throw new Error('El ID del autor es requerido');
     }
 
-    // Verificar si el autor existe como administrador o coordinador
-    const { data: usuario } = await supabase.auth.getSession();
-    const role = usuario?.session?.user?.user_metadata?.role;
-
+    // El control de permisos se maneja a través de las políticas RLS de Supabase
     console.log('[Publicaciones] Verificación de autor:', { 
-        role,
         autor_id: publicacion.autor_id 
     });
-
-    if (!role || !['admin', 'coordinador'].includes(role)) {
-        console.error('[Publicaciones] Error: El usuario no tiene permisos para crear publicaciones');
-        throw new Error('No tiene permisos para crear publicaciones');
-    }
 
     console.log('[Publicaciones] Intentando crear publicación con datos:', {
         titulo: publicacion.titulo,
