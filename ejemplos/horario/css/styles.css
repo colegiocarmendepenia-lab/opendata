@@ -1,0 +1,246 @@
+:root {
+    --primary: #3f51b5;
+    --primary-light: #e8eaf6;
+    --secondary: #f5f5f5;
+    --text: #333;
+    --text-light: #666;
+    --border: #e0e0e0;
+    --white: #ffffff;
+    --shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body {
+    background-color: #f9f9f9;
+    color: var(--text);
+    line-height: 1.6;
+    padding: 20px;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    background: var(--white);
+    border-radius: 12px;
+    box-shadow: var(--shadow);
+    overflow: hidden;
+}
+
+header {
+    background: var(--primary);
+    color: white;
+    padding: 25px 30px;
+    text-align: center;
+}
+
+h1 {
+    font-size: 28px;
+    font-weight: 600;
+    margin-bottom: 5px;
+}
+
+.subtitle {
+    font-size: 16px;
+    opacity: 0.9;
+    margin-bottom: 15px;
+}
+
+.controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 30px;
+    background: var(--secondary);
+    border-bottom: 1px solid var(--border);
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+.filter-controls {
+    display: flex;
+    gap: 15px;
+    flex-wrap: wrap;
+}
+
+select {
+    padding: 10px 15px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--white);
+    font-size: 14px;
+    min-width: 150px;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+button {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.btn-primary {
+    background: var(--primary);
+    color: white;
+}
+
+.btn-primary:hover {
+    background: #303f9f;
+}
+
+.btn-secondary {
+    background: #757575;
+    color: white;
+}
+
+.btn-secondary:hover {
+    background: #616161;
+}
+
+.btn-success {
+    background: #4caf50;
+    color: white;
+}
+
+.btn-success:hover {
+    background: #388e3c;
+}
+
+.schedule-container {
+    padding: 30px;
+    overflow-x: auto;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 800px;
+}
+
+th {
+    background: var(--primary-light);
+    color: var(--primary);
+    padding: 15px 10px;
+    text-align: center;
+    font-weight: 600;
+    border: 1px solid var(--border);
+}
+
+td {
+    padding: 12px 10px;
+    border: 1px solid var(--border);
+    text-align: center;
+    vertical-align: top;
+}
+
+.time-cell {
+    background: var(--secondary);
+    font-weight: 500;
+}
+
+.class-cell {
+    background: var(--white);
+    transition: background 0.2s;
+}
+
+.class-cell:hover {
+    background: #f0f4ff;
+}
+
+.materia {
+    font-weight: 600;
+    margin-bottom: 5px;
+    color: var(--primary);
+}
+
+.profesor {
+    font-size: 13px;
+    color: var(--text-light);
+}
+
+.periodo {
+    font-size: 12px;
+    color: var(--text-light);
+    margin-top: 5px;
+}
+
+.turno-badge {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 500;
+    margin-bottom: 10px;
+}
+
+.tt-badge {
+    background: #e3f2fd;
+    color: #1565c0;
+}
+
+.tm-badge {
+    background: #f3e5f5;
+    color: #7b1fa2;
+}
+
+footer {
+    text-align: center;
+    padding: 20px;
+    color: var(--text-light);
+    font-size: 14px;
+    border-top: 1px solid var(--border);
+}
+
+@media print {
+    body {
+        background: white;
+        padding: 0;
+    }
+    
+    .container {
+        box-shadow: none;
+        border-radius: 0;
+    }
+    
+    .controls {
+        display: none;
+    }
+    
+    footer {
+        display: none;
+    }
+}
+
+@media (max-width: 768px) {
+    .controls {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .action-buttons {
+        width: 100%;
+        justify-content: space-between;
+    }
+    
+    button {
+        flex: 1;
+        justify-content: center;
+    }
+}

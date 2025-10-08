@@ -157,22 +157,9 @@ async function cargarCursos() {
 }
 
 // Función para ver el horario de un curso específico
-window.verHorarioCurso = async function(nombreCurso) {
-    try {
-        const { data: horarios, error } = await supabase
-            .from('horario')
-            .select('*')
-            .eq('curso', nombreCurso)
-            .order('created_at');
-
-        // Aquí podrías mostrar el horario en un modal o en una nueva sección
-        // Por ahora solo mostraremos un mensaje
-        console.log('Horarios del curso:', horarios);
-        alert('Función de visualización de horarios en desarrollo');
-    } catch (error) {
-        console.error('Error al cargar el horario:', error);
-        alert('No se pudo cargar el horario del curso.');
-    }
+window.verHorarioCurso = function(nombreCurso) {
+    // Redireccionar al horario con el curso como parámetro
+    window.location.href = `ejemplos/horario/index.html?curso=${encodeURIComponent(nombreCurso)}`;
 };
 
 // Inicializar la página

@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Horario Escolar - 3ºD-BTI</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        :root {
+            --primary: #3f51b5;
+            --primary-light: #e8eaf6;
+            --secondary: #f5f5f5;
+            --text: #333;
+            --text-light: #666;
+            --border: #e0e0e0;
+            --white: #ffffff;
+            --shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #f9f9f9;
+            color: var(--text);
+            line-height: 1.6;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: var(--white);
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            overflow: hidden;
+        }
+        
+        header {
+            background: var(--primary);
+            color: white;
+            padding: 25px 30px;
+            text-align: center;
+        }
+        
+        h1 {
+            font-size: 28px;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+        
+        .subtitle {
+            font-size: 16px;
+            opacity: 0.9;
+            margin-bottom: 15px;
+        }
+        
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 30px;
+            background: var(--secondary);
+            border-bottom: 1px solid var(--border);
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        
+        .filter-controls {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        
+        select {
+            padding: 10px 15px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            background: var(--white);
+            font-size: 14px;
+            min-width: 150px;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #303f9f;
+        }
+        
+        .btn-secondary {
+            background: #757575;
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background: #616161;
+        }
+        
+        .btn-success {
+            background: #4caf50;
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background: #388e3c;
+        }
+        
+        .schedule-container {
+            padding: 30px;
+            overflow-x: auto;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 800px;
+        }
+        
+        th {
+            background: var(--primary-light);
+            color: var(--primary);
+            padding: 15px 10px;
+            text-align: center;
+            font-weight: 600;
+            border: 1px solid var(--border);
+        }
+        
+        td {
+            padding: 12px 10px;
+            border: 1px solid var(--border);
+            text-align: center;
+            vertical-align: top;
+        }
+        
+        .time-cell {
+            background: var(--secondary);
+            font-weight: 500;
+        }
+        
+        .class-cell {
+            background: var(--white);
+            transition: background 0.2s;
+        }
+        
+        .class-cell:hover {
+            background: #f0f4ff;
+        }
+        
+        .materia {
+            font-weight: 600;
+            margin-bottom: 5px;
+            color: var(--primary);
+        }
+        
+        .profesor {
+            font-size: 13px;
+            color: var(--text-light);
+        }
+        
+        .periodo {
+            font-size: 12px;
+            color: var(--text-light);
+            margin-top: 5px;
+        }
+        
+        .turno-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+            margin-bottom: 10px;
+        }
+        
+        .tt-badge {
+            background: #e3f2fd;
+            color: #1565c0;
+        }
+        
+        .tm-badge {
+            background: #f3e5f5;
+            color: #7b1fa2;
+        }
+        
+        footer {
+            text-align: center;
+            padding: 20px;
+            color: var(--text-light);
+            font-size: 14px;
+            border-top: 1px solid var(--border);
+        }
+        
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+            }
+            
+            .container {
+                box-shadow: none;
+                border-radius: 0;
+            }
+            
+            .controls {
+                display: none;
+            }
+            
+            footer {
+                display: none;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .controls {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .action-buttons {
+                width: 100%;
+                justify-content: space-between;
+            }
+            
+            button {
+                flex: 1;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>HORARIO ESCOLAR</h1>
+            <div class="subtitle">3ºD-BTI - NIVEL MEDIO</div>
+        </header>
+        
+        <div class="controls">
+            <div class="filter-controls">
+                <select id="turnoFilter">
+                    <option value="all">Todos los turnos</option>
+                    <option value="T.T.">Turno Tarde</option>
+                    <option value="T.M.">Turno Mañana</option>
+                </select>
+                
+                <select id="diaFilter">
+                    <option value="all">Todos los días</option>
+                    <option value="LUNES">Lunes</option>
+                    <option value="MARTES">Martes</option>
+                    <option value="MIÉRCOLES">Miércoles</option>
+                    <option value="JUEVES">Jueves</option>
+                    <option value="VIERNES">Viernes</option>
+                </select>
+            </div>
+            
+            <div class="action-buttons">
+                <button class="btn-primary" onclick="imprimirReporte()">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                        <path d="M5 1a2 2 0 0 0-2 2v1h10V3a2 2 0 0 0-2-2H5zm6 8H5a1 1 0 0 0-1 1v3a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-3a1 1 0 0 0-1-1z"/>
+                        <path d="M0 7a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2h-1v-2a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v2H2a2 2 0 0 1-2-2V7zm2.5 1a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1z"/>
+                    </svg>
+                    Imprimir
+                </button>
+                <button class="btn-success" onclick="exportarExcel()">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                        <path d="M5.884 6.68a.5.5 0 0 0-.772.63L8 11.154l2.888-3.844a.5.5 0 0 0-.772-.63L8 9.846 5.884 6.68z"/>
+                        <path d="M14 4.5V14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V2a2 2 0 0 1 2-2h5.5L14 4.5zm-3 0A1.5 1.5 0 0 1 9.5 3V1H4a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V4.5h-2z"/>
+                    </svg>
+                    Excel
+                </button>
+                <button class="btn-secondary" onclick="exportarPDF()">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                        <path d="M5.523 10.424c.14-.082.293-.162.459-.238a7.878 7.878 0 0 1-.45.606c-.28.337-.498.516-.635.572a.266.266 0 0 1-.035.012.282.282 0 0 1-.026-.044c-.056-.11-.054-.216.04-.36.106-.165.319-.354.647-.548zm2.455-1.647c-.119.025-.237.05-.356.078a21.148 21.148 0 0 0 .5-1.05 12.045 12.045 0 0 0 .51.858c-.217.032-.436.067-.654.114zm2.525.939a3.881 3.881 0 0 1-.435-.41c.228.005.434.022.612.054.317.057.466.147.518.209a.095.095 0 0 1 .026.064.436.436 0 0 1-.06.2.307.307 0 0 1-.094.124.107.107 0 0 1-.069.015c-.09-.003-.258-.066-.498-.256zM8.278 4.97c-.04.244-.108.524-.2.829a4.86 4.86 0 0 1-.089-.346c-.076-.353-.087-.63-.046-.822.038-.177.11-.248.196-.283a.517.517 0 0 1 .145-.04c.013.03.028.092.032.198.005.122-.007.277-.038.465z"/>
+                        <path fill-rule="evenodd" d="M4 0h5.293A1 1 0 0 1 10 .293L13.707 4a1 1 0 0 1 .293.707V14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V2a2 2 0 0 1 2-2zm5.5 1.5v2a1 1 0 0 0 1 1h2l-3-3zM4.165 13.668c.09.18.23.343.438.419.207.075.412.04.58-.03.318-.13.635-.436.926-.786.333-.401.683-.927 1.021-1.51a11.651 11.651 0 0 1 1.997-.406c.3.383.61.713.91.95.28.22.603.403.934.417a.856.856 0 0 0 .51-.138c.155-.101.27-.247.354-.416.09-.181.145-.37.138-.563a.844.844 0 0 0-.2-.518c-.226-.27-.596-.4-.96-.465a5.76 5.76 0 0 0-1.335-.05 10.954 10.954 0 0 1-.98-1.686c.25-.66.437-1.284.52-1.794.036-.218.055-.426.048-.614a1.238 1.238 0 0 0-.127-.538.7.7 0 0 0-.477-.365c-.202-.043-.41 0-.601.077-.377.15-.576.47-.651.823-.073.34-.04.736.046 1.136.088.406.238.848.43 1.295a19.697 19.697 0 0 1-1.062 2.227 7.662 7.662 0 0 0-1.482.645c-.37.22-.699.48-.897.787-.21.326-.275.714-.08 1.103z"/>
+                    </svg>
+                    PDF
+                </button>
+            </div>
+        </div>
+        
+        <div class="schedule-container">
+            <div id="schedule-content">
+                <!-- El horario se generará aquí dinámicamente -->
+            </div>
+        </div>
+        
+        <footer>
+            <p>Generado el <span id="fecha-actual"></span> - Sistema de Gestión Escolar</p>
+        </footer>
+    </div>
+
+    <script>
+        // Datos del horario
+        const horarioData = [
+            // ... (todos los datos JSON que proporcionaste)
+            {"idx":0,"id":1,"nivel":"NIVEL MEDIO","turno":"T.T.","curso":"3ºD-BTI","dia_semana":"LUNES","hora_inicio":"13:00:00","hora_fin":"13:40:00","periodo":"1ª","materia":"Historia","profesor":"Félix A.","created_at":"2025-10-07 11:31:04.337208","id_horario":1},
+            {"idx":1,"id":2,"nivel":"NIVEL MEDIO","turno":"T.T.","curso":"3ºD-BTI","dia_semana":"LUNES","hora_inicio":"13:40:00","hora_fin":"14:20:00","periodo":"2ª","materia":"Historia","profesor":"Félix A.","created_at":"2025-10-07 11:31:04.337208","id_horario":1},
+            {"idx":2,"id":3,"nivel":"NIVEL MEDIO","turno":"T.T.","curso":"3ºD-BTI","dia_semana":"LUNES","hora_inicio":"14:20:00","hora_fin":"15:00:00","periodo":"3ª","materia":"Matemática","profesor":"Angela M.","created_at":"2025-10-07 11:31:04.337208","id_horario":1},
+            {"idx":3,"id":4,"nivel":"NIVEL MEDIO","turno":"T.T.","curso":"3ºD-BTI","dia_semana":"LUNES","hora_inicio":"15:00:00","hora_fin":"15:40:00","periodo":"4ª","materia":"Matemática","profesor":"Angela M.","created_at":"2025-10-07 11:31:04.337208","id_horario":1},
+            {"idx":4,"id":5,"nivel":"NIVEL MEDIO","turno":"T.T.","curso":"3ºD-BTI","dia_semana":"LUNES","hora_inicio":"15:40:00","hora_fin":"16:20:00","periodo":"5ª","materia":"Psicología","profesor":"Walter G.","created_at":"2025-10-07 11:31:04.337208","id_horario":1},
+            {"idx":5,"id":6,"nivel":"NIVEL MEDIO","turno":"T.T.","curso":"3ºD-BTI","dia_semana":"LUNES","hora_inicio":"16:20:00","hora_fin":"17:00:00","periodo":"6ª","materia":"Psicología","profesor":"Walter G.","created_at":"2025-10-07 11:31:04.337208","id_horario":1},
+            {"idx":6,"id":7,"nivel":"NIVEL MEDIO","turno":"T.T.","curso":"3ºD-BTI","dia_semana":"LUNES","hora_inicio":"17:00:00","hora_fin":"17:35:00","periodo":"7ª","materia":"Literatura","profesor":"Lina G.","created_at":"2025-10-07 11:31:04.337208","id_horario":1},
+            {"idx":7,"id":8,"nivel":"NIVEL MEDIO","turno":"T.T.","curso":"3ºD-BTI","dia_semana":"LUNES","hora_inicio":"17:35:00","hora_fin":"18:10:00","periodo":"8ª","materia":"Literatura","profesor":"Lina G.","created_at":"2025-10-07 11:31:04.337208","id_horario":1},
+            {"idx":8,"id":9,"nivel":"NIVEL MEDIO","turno":"T.T.","curso":"3ºD-BTI","dia_semana":"MARTES","hora_inicio":"13:00:00","hora_fin":"13:40:00","periodo":"1ª","materia":"Cooperativismo","profesor":"Alba M.","created_at":"2025-10-07 11:31:11.869123","id_horario":1},
+            {"idx":9,"id":10,"nivel":"NIVEL MEDIO","turno":"T.T.","curso":"3ºD-BTI","dia_semana":"MARTES","hora_inicio":"13:40:00","hora_fin":"14:20:00","periodo":"2ª","materia":"Cooperativismo","profesor":"Alba M.","created_at":"2025-10-07 11:31:11.869123","id_horario":1},
+            {"idx":10,"id":11,"nivel":"NIVEL MEDIO","turno":"T.T.","curso":"3ºD-BTI","dia_semana":"MARTES","hora_inicio":"14:20:00","hora_fin":"15:00:00","periodo":"3ª","materia":"Administración","profesor":"Alba M.","created_at":"2025-10-07 11:31:11.869123","id_horario":1},
+            {"idx":11,"id":12,"nivel":"NIVEL MEDIO","turno":"T.T.","curso":"3ºD-BTI","dia_semana":"MARTES","hora_inicio":"15:00:00","hora_fin":"15:40:00","periodo":"4ª","materia":"Administración","profesor":"Alba M.","created_at":"2025-10-07 11:31:11.869123","id_horario":1},
+            {"idx":12,"id":13,"nivel":"NIVEL MEDIO","turno":"T.T.","curso":"3ºD-BTI","dia_semana":"MARTES","hora_inicio":"15:40:00","hora_fin":"16:20:00","periodo":"5ª","materia":"Gabinete","profesor":"Eder T.","created_at":"2025-10-07 11:31:11.869123","id_horario":1},
+            {"idx":13,"id":14,"nivel":"NIVEL MEDIO","turno":"T.T.","curso":"3ºD-BTI","dia_semana":"MARTES","hora_inicio":"16:20:00","hora_fin":"17:00:00","periodo":"6ª","materia":"Gabinete","profesor":"Eder T.","created_at":"2025-10-07 11:31:11.869123","id_horario":1},
+            {"idx":14,"id":15,"nivel":"NIVEL MEDIO","turno":"T.T.","curso":"3ºD-BTI","dia_semana":"MARTES","hora_inicio":"17:00:00","hora_fin":"17:35:00","periodo":"7ª","materia":"Gabinete","profesor":"Eder T.","created_at":"2025-10-07 11:31:11.869123","id_horario":1},
+            {"idx":15,"id":16,"nivel":"NIVEL MEDIO","turno":"T.T.","curso":"3ºD-BTI","dia_semana":"MARTES","hora_inicio":"17:35:00","hora_fin":"18:10:00","periodo":"8ª","materia":"Gabinete","profesor":"Eder T.","created_at":"2025-10-07 11:31:11.869123","id_horario":1},
+            {"idx":24,"id":25,"nivel":"NIVEL MEDIO","turno":"T.T.","curso":"3ºD-BTI","dia_semana":"JUEVES","hora_inicio":"13:00:00","hora_fin":"13:40:00","periodo":"1ª","materia":"Algoritmos","profesor":"Eder T.","created_at":"2025-10-07 11:31:25.865817","id_horario":1},
+            {"idx":25,"id":26,"nivel":"NIVEL MEDIO","turno":"T.T.","curso":"3ºD-BTI","dia_semana":"JUEVES","hora_inicio":"13:40:00","hora_fin":"14:20:00","periodo":"2ª","materia":"Algoritmos","profesor":"Eder T.","created_at":"2025-10-07 11:31:25.865817","id_horario":1},
+            {"idx":26,"id":27,"nivel":"NIVEL MEDIO","turno":"T.T.","curso":"3ºD-BTI","dia_semana":"JUEVES","hora_inicio":"14:20:00","hora_fin":"15:00:00","periodo":"3ª","materia":"Algoritmos","profesor":"Eder T.","created_at":"2025-10-07 11:31:25.865817","id_horario":1},
+            {"idx":27,"id":28,"nivel":"NIVEL MEDIO","turno":"T.T.","curso":"3ºD-BTI","dia_semana":"JUEVES","hora_inicio":"15:00:00","hora_fin":"15:40:00","periodo":"4ª","materia":"Algoritmos","profesor":"Eder T.","created_at":"2025-10-07 11:31:25.865817","id_horario":1},
+            {"idx":28,"id":29,"nivel":"NIVEL MEDIO","turno":"T.T.","curso":"3ºD-BTI","dia_semana":"JUEVES","hora_inicio":"15:40:00","hora_fin":"16:20:00","periodo":"5ª","materia":"Economía","profesor":"Cinthia B.","created_at":"2025-10-07 11:31:25.865817","id_horario":1},
+            {"idx":29,"id":30,"nivel":"NIVEL MEDIO","turno":"T.T.","curso":"3ºD-BTI","dia_semana":"JUEVES","hora_inicio":"16:20:00","hora_fin":"17:00:00","periodo":"6ª","materia":"Economía","profesor":"Cinthia B.","created_at":"2025-10-07 11:31:25.865817","id_horario":1},
+            {"idx":30,"id":31,"nivel":"NIVEL MEDIO","turno":"T.T.","curso":"3ºD-BTI","dia_semana":"JUEVES","hora_inicio":"17:00:00","hora_fin":"17:35:00","periodo":"7ª","materia":"Economía","profesor":"Cinthia B.","created_at":"2025-10-07 11:31:25.865817","id_horario":1},
+            {"idx":31,"id":32,"nivel":"NIVEL MEDIO","turno":"T.T.","curso":"3ºD-BTI","dia_semana":"JUEVES","hora_inicio":"17:35:00","hora_fin":"18:10:00","periodo":"8ª","materia":"Economía","profesor":"Cinthia B.","created_at":"2025-10-07 11:31:25.865817","id_horario":1},
+            {"idx":32,"id":33,"nivel":"NIVEL MEDIO","turno":"T.T.","curso":"3ºD-BTI","dia_semana":"VIERNES","hora_inicio":"13:00:00","hora_fin":"13:40:00","periodo":"1ª","materia":"Literatura","profesor":"Lina G.","created_at":"2025-10-07 11:31:36.137415","id_horario":1},
+            {"idx":33,"id":34,"nivel":"NIVEL MEDIO","turno":"T.T.","curso":"3ºD-BTI","dia_semana":"VIERNES","hora_inicio":"13:40:00","hora_fin":"14:20:00","periodo":"2ª","materia":"Literatura","profesor":"Lina G.","created_at":"2025-10-07 11:31:36.137415","id_horario":1},
+            {"idx":34,"id":35,"nivel":"NIVEL MEDIO","turno":"T.T.","curso":"3ºD-BTI","dia_semana":"VIERNES","hora_inicio":"14:20:00","hora_fin":"15:00:00","periodo":"3ª","materia":"Psicología","profesor":"Walter G.","created_at":"2025-10-07 11:31:36.137415","id_horario":1},
+            {"idx":35,"id":36,"nivel":"NIVEL MEDIO","turno":"T.T.","curso":"3ºD-BTI","dia_semana":"VIERNES","hora_inicio":"15:00:00","hora_fin":"15:40:00","periodo":"4ª","materia":"Psicología","profesor":"Walter G.","created_at":"2025-10-07 11:31:36.137415","id_horario":1},
+            {"idx":36,"id":37,"nivel":"NIVEL MEDIO","turno":"T.T.","curso":"3ºD-BTI","dia_semana":"VIERNES","hora_inicio":"15:40:00","hora_fin":"16:20:00","periodo":"5ª","materia":"Orientación","profesor":"Walter G.","created_at":"2025-10-07 11:31:36.137415","id_horario":1},
+            {"idx":37,"id":38,"nivel":"NIVEL MEDIO","turno":"T.T.","curso":"3ºD-BTI","dia_semana":"VIERNES","hora_inicio":"16:20:00","hora_fin":"17:00:00","periodo":"6ª","materia":"Orientación","profesor":"Walter G.","created_at":"2025-10-07 11:31:36.137415","id_horario":1},
+            {"idx":38,"id":39,"nivel":"NIVEL MEDIO","turno":"T.T.","curso":"3ºD-BTI","dia_semana":"VIERNES","hora_inicio":"17:00:00","hora_fin":"17:35:00","periodo":"7ª","materia":"Ciencias Naturales","profesor":"Nora R.","created_at":"2025-10-07 11:31:36.137415","id_horario":1},
+            {"idx":39,"id":40,"nivel":"NIVEL MEDIO","turno":"T.T.","curso":"3ºD-BTI","dia_semana":"VIERNES","hora_inicio":"17:35:00","hora_fin":"18:10:00","periodo":"8ª","materia":"Ciencias Naturales","profesor":"Nora R.","created_at":"2025-10-07 11:31:36.137415","id_horario":1},
+            {"idx":40,"id":41,"nivel":"NIVEL MEDIO","turno":"T.M.","curso":"3ºD-BTI","dia_semana":"MARTES","hora_inicio":"09:00:00","hora_fin":"09:40:00","periodo":"4ª","materia":"Educación Física","profesor":null,"created_at":"2025-10-07 11:31:47.100013","id_horario":1},
+            {"idx":41,"id":42,"nivel":"NIVEL MEDIO","turno":"T.M.","curso":"3ºD-BTI","dia_semana":"MARTES","hora_inicio":"09:40:00","hora_fin":"10:20:00","periodo":"5ª","materia":"Educación Física","profesor":null,"created_at":"2025-10-07 11:31:47.100013","id_horario":1},
+            {"idx":42,"id":43,"nivel":"NIVEL MEDIO","turno":"T.M.","curso":"3ºD-BTI","dia_semana":"JUEVES","hora_inicio":"07:00:00","hora_fin":"07:40:00","periodo":"1ª","materia":"Gabinete","profesor":"Eder Torres","created_at":"2025-10-07 11:31:54.048819","id_horario":1},
+            {"idx":43,"id":44,"nivel":"NIVEL MEDIO","turno":"T.M.","curso":"3ºD-BTI","dia_semana":"JUEVES","hora_inicio":"07:40:00","hora_fin":"08:20:00","periodo":"2ª","materia":"Gabinete","profesor":"Eder Torres","created_at":"2025-10-07 11:31:54.048819","id_horario":1},
+            {"idx":44,"id":45,"nivel":"NIVEL MEDIO","turno":"T.M.","curso":"3ºD-BTI","dia_semana":"JUEVES","hora_inicio":"08:20:00","hora_fin":"09:00:00","periodo":"3ª","materia":"Gabinete","profesor":"Eder Torres","created_at":"2025-10-07 11:31:54.048819","id_horario":1},
+            {"idx":45,"id":46,"nivel":"NIVEL MEDIO","turno":"T.M.","curso":"3ºD-BTI","dia_semana":"JUEVES","hora_inicio":"09:00:00","hora_fin":"09:40:00","periodo":"4ª","materia":"Gabinete","profesor":"Eder Torres","created_at":"2025-10-07 11:31:54.048819","id_horario":1},
+            {"idx":46,"id":47,"nivel":"NIVEL MEDIO","turno":"T.M.","curso":"3ºD-BTI","dia_semana":"JUEVES","hora_inicio":"09:40:00","hora_fin":"10:20:00","periodo":"5ª","materia":"Gabinete","profesor":"Eder Torres","created_at":"2025-10-07 11:31:54.048819","id_horario":1},
+            {"idx":47,"id":48,"nivel":"NIVEL MEDIO","turno":"T.M.","curso":"3ºD-BTI","dia_semana":"JUEVES","hora_inicio":"10:20:00","hora_fin":"11:00:00","periodo":"6ª","materia":"Gabinete","profesor":"Eder Torres","created_at":"2025-10-07 11:31:54.048819","id_horario":1},
+            {"idx":48,"id":49,"nivel":"NIVEL MEDIO","turno":"T.M.","curso":"3ºD-BTI","dia_semana":"JUEVES","hora_inicio":"11:00:00","hora_fin":"11:35:00","periodo":"7ª","materia":"Gabinete","profesor":"Eder Torres","created_at":"2025-10-07 11:31:54.048819","id_horario":1},
+            {"idx":49,"id":50,"nivel":"NIVEL MEDIO","turno":"T.M.","curso":"3ºD-BTI","dia_semana":"JUEVES","hora_inicio":"11:35:00","hora_fin":"12:10:00","periodo":"8ª","materia":"Gabinete","profesor":"Eder Torres","created_at":"2025-10-07 11:31:54.048819","id_horario":1}
+        ];
+
+        // Función para formatear la hora
+        function formatearHora(hora) {
+            return hora.substring(0, 5);
+        }
+
+        // Función para generar el horario
+        function generarHorario(turnoFiltro = 'all', diaFiltro = 'all') {
+            const scheduleContent = document.getElementById('schedule-content');
+            scheduleContent.innerHTML = '';
+            
+            // Filtrar datos
+            let datosFiltrados = horarioData;
+            if (turnoFiltro !== 'all') {
+                datosFiltrados = datosFiltrados.filter(item => item.turno === turnoFiltro);
+            }
+            if (diaFiltro !== 'all') {
+                datosFiltrados = datosFiltrados.filter(item => item.dia_semana === diaFiltro);
+            }
+            
+            if (datosFiltrados.length === 0) {
+                scheduleContent.innerHTML = '<p style="text-align: center; padding: 20px;">No hay datos para mostrar con los filtros seleccionados.</p>';
+                return;
+            }
+            
+            // Agrupar por turno
+            const turnos = [...new Set(datosFiltrados.map(item => item.turno))];
+            
+            turnos.forEach(turno => {
+                const datosTurno = datosFiltrados.filter(item => item.turno === turno);
+                
+                // Crear tabla para el turno
+                const tabla = document.createElement('table');
+                
+                // Crear encabezado
+                const thead = document.createElement('thead');
+                const headerRow = document.createElement('tr');
+                
+                // Celda vacía para la esquina
+                const emptyHeader = document.createElement('th');
+                emptyHeader.textContent = 'Hora / Día';
+                headerRow.appendChild(emptyHeader);
+                
+                // Obtener días únicos para este turno
+                const dias = [...new Set(datosTurno.map(item => item.dia_semana))];
+                
+                // Ordenar días de la semana
+                const ordenDias = ['LUNES', 'MARTES', 'MIÉRCOLES', 'JUEVES', 'VIERNES', 'SÁBADO', 'DOMINGO'];
+                dias.sort((a, b) => ordenDias.indexOf(a) - ordenDias.indexOf(b));
+                
+                // Crear encabezados de días
+                dias.forEach(dia => {
+                    const th = document.createElement('th');
+                    th.textContent = dia;
+                    headerRow.appendChild(th);
+                });
+                
+                thead.appendChild(headerRow);
+                tabla.appendChild(thead);
+                
+                // Crear cuerpo de la tabla
+                const tbody = document.createElement('tbody');
+                
+                // Obtener horas únicas para este turno
+                const horas = [...new Set(datosTurno.map(item => item.hora_inicio))];
+                horas.sort();
+                
+                // Crear filas para cada hora
+                horas.forEach(hora => {
+                    const row = document.createElement('tr');
+                    
+                    // Celda de hora
+                    const horaCell = document.createElement('td');
+                    horaCell.className = 'time-cell';
+                    horaCell.textContent = formatearHora(hora);
+                    row.appendChild(horaCell);
+                    
+                    // Celdas para cada día
+                    dias.forEach(dia => {
+                        const clase = datosTurno.find(item => 
+                            item.dia_semana === dia && item.hora_inicio === hora
+                        );
+                        
+                        const cell = document.createElement('td');
+                        cell.className = 'class-cell';
+                        
+                        if (clase) {
+                            cell.innerHTML = `
+                                <div class="materia">${clase.materia}</div>
+                                <div class="profesor">${clase.profesor || 'Sin asignar'}</div>
+                                <div class="periodo">${clase.periodo}</div>
+                            `;
+                        }
+                        
+                        row.appendChild(cell);
+                    });
+                    
+                    tbody.appendChild(row);
+                });
+                
+                tabla.appendChild(tbody);
+                
+                // Crear contenedor para la tabla con el badge del turno
+                const turnoContainer = document.createElement('div');
+                turnoContainer.style.marginBottom = '30px';
+                
+                const turnoBadge = document.createElement('div');
+                turnoBadge.className = `turno-badge ${turno === 'T.T.' ? 'tt-badge' : 'tm-badge'}`;
+                turnoBadge.textContent = turno === 'T.T.' ? 'TURNO TARDE' : 'TURNO MAÑANA';
+                
+                turnoContainer.appendChild(turnoBadge);
+                turnoContainer.appendChild(tabla);
+                
+                scheduleContent.appendChild(turnoContainer);
+            });
+        }
+
+        // Función para imprimir el reporte
+        function imprimirReporte() {
+            window.print();
+        }
+
+        // Función para exportar a Excel
+        function exportarExcel() {
+            // Preparar datos para Excel
+            const datosExcel = horarioData.map(item => ({
+                'Nivel': item.nivel,
+                'Turno': item.turno,
+                'Curso': item.curso,
+                'Día': item.dia_semana,
+                'Hora Inicio': formatearHora(item.hora_inicio),
+                'Hora Fin': formatearHora(item.hora_fin),
+                'Período': item.periodo,
+                'Materia': item.materia,
+                'Profesor': item.profesor || 'Sin asignar'
+            }));
+            
+            // Crear libro de trabajo
+            const wb = XLSX.utils.book_new();
+            const ws = XLSX.utils.json_to_sheet(datosExcel);
+            
+            // Añadir hoja al libro
+            XLSX.utils.book_append_sheet(wb, ws, 'Horario Escolar');
+            
+            // Exportar a Excel
+            XLSX.writeFile(wb, 'horario_escolar_3DBTI.xlsx');
+        }
+
+        // Función para exportar a PDF
+        function exportarPDF() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF('p', 'mm', 'a4');
+            
+            // Capturar el contenido HTML como imagen
+            html2canvas(document.querySelector('.container')).then(canvas => {
+                const imgData = canvas.toDataURL('image/png');
+                const imgWidth = 210; // A4 width in mm
+                const pageHeight = 295; // A4 height in mm
+                const imgHeight = canvas.height * imgWidth / canvas.width;
+                let heightLeft = imgHeight;
+                
+                let position = 0;
+                
+                // Añadir primera página
+                doc.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+                heightLeft -= pageHeight;
+                
+                // Añadir páginas adicionales si es necesario
+                while (heightLeft >= 0) {
+                    position = heightLeft - imgHeight;
+                    doc.addPage();
+                    doc.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+                    heightLeft -= pageHeight;
+                }
+                
+                // Guardar PDF
+                doc.save('horario_escolar_3DBTI.pdf');
+            });
+        }
+
+        // Inicializar la página
+        document.addEventListener('DOMContentLoaded', function() {
+            // Establecer fecha actual
+            const ahora = new Date();
+            const opciones = { year: 'numeric', month: 'long', day: 'numeric' };
+            document.getElementById('fecha-actual').textContent = 
+                ahora.toLocaleDateString('es-ES', opciones);
+            
+            // Generar horario inicial
+            generarHorario();
+            
+            // Configurar eventos de filtros
+            document.getElementById('turnoFilter').addEventListener('change', function() {
+                const turno = this.value;
+                const dia = document.getElementById('diaFilter').value;
+                generarHorario(turno, dia);
+            });
+            
+            document.getElementById('diaFilter').addEventListener('change', function() {
+                const dia = this.value;
+                const turno = document.getElementById('turnoFilter').value;
+                generarHorario(turno, dia);
+            });
+        });
+    </script>
+</body>
+</html>
