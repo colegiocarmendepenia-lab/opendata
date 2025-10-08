@@ -40,22 +40,18 @@ export async function crearPublicacion(publicacion) {
         throw new Error('El ID del autor es requerido');
     }
 
-    // Verificar si el autor existe en la tabla administrador
-    const { data: autorExiste, error: errorAutor } = await supabase
-        .from('administrador')
-        .select('id')
-        .eq('id', publicacion.autor_id)
-        .single();
+    // Verificar si el autor existe como administrador o coordinador
+    const { data: usuario } = await supabase.auth.getSession();
+    const role = usuario?.session?.user?.user_metadata?.role;
 
     console.log('[Publicaciones] Verificación de autor:', { 
-        autorExiste, 
-        errorAutor,
+        role,
         autor_id: publicacion.autor_id 
     });
 
-    if (!autorExiste) {
-        console.error('[Publicaciones] Error: El autor no existe en la tabla administrador');
-        throw new Error('El autor especificado no existe');
+    if (!role || !['admin', 'coordinador'].includes(role)) {
+        console.error('[Publicaciones] Error: El usuario no tiene permisos para crear publicaciones');
+        throw new Error('No tiene permisos para crear publicaciones');
     }
 
     console.log('[Publicaciones] Intentando crear publicación con datos:', {
