@@ -102,9 +102,82 @@ window.verDetalles = async function(id) {
     }
 };
 
+// Función para cargar cursos en el menú
+async function cargarCursos() {
+    try {
+        const { data: cursos, error } = await supabase
+            .from('horario_escolar')
+            .select('curso_id(id, nombre)')
+            .order('curso_id')
+            .limit(100);
+
+        if (error) throw error;
+
+        // Eliminar duplicados usando Set
+        const cursosUnicos = [...new Set(cursos.map(c => JSON.stringify({ 
+            id: c.curso_id.id, 
+            nombre: c.curso_id.nombre 
+        })))].map(str => JSON.parse(str));
+
+        const menuCursos = document.getElementById('listaCursos');
+        if (!menuCursos) return;
+
+        if (cursosUnicos.length === 0) {
+            menuCursos.innerHTML = `
+                <li><a class="dropdown-item" href="#">No hay cursos disponibles</a></li>
+            `;
+            return;
+        }
+
+        menuCursos.innerHTML = cursosUnicos.map(curso => `
+            <li>
+                <a class="dropdown-item" href="#" onclick="verHorarioCurso('${curso.id}')">
+                    <i class="bi bi-mortarboard-fill"></i> ${curso.nombre}
+                </a>
+            </li>
+        `).join('');
+
+    } catch (error) {
+        console.error('Error al cargar cursos:', error);
+        const menuCursos = document.getElementById('listaCursos');
+        if (menuCursos) {
+            menuCursos.innerHTML = `
+                <li><a class="dropdown-item text-danger" href="#">Error al cargar cursos</a></li>
+            `;
+        }
+    }
+}
+
+// Función para ver el horario de un curso específico
+window.verHorarioCurso = async function(cursoId) {
+    try {
+        const { data: horarios, error } = await supabase
+            .from('horario_escolar')
+            .select(`
+                *,
+                curso_id(nombre),
+                asignatura_id(nombre),
+                docente_id(nombre, apellido)
+            `)
+            .eq('curso_id', cursoId)
+            .order('dia_semana');
+
+        if (error) throw error;
+
+        // Aquí podrías mostrar el horario en un modal o en una nueva sección
+        // Por ahora solo mostraremos un mensaje
+        console.log('Horarios del curso:', horarios);
+        alert('Función de visualización de horarios en desarrollo');
+    } catch (error) {
+        console.error('Error al cargar el horario:', error);
+        alert('No se pudo cargar el horario del curso.');
+    }
+};
+
 // Inicializar la página
 document.addEventListener('DOMContentLoaded', () => {
     cargarAvisos();
+    cargarCursos();
 
     // Configurar los filtros
     document.querySelectorAll('.btn-outline-primary').forEach(button => {
