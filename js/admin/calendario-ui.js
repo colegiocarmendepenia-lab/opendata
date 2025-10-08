@@ -2,7 +2,7 @@
 console.log('[Calendario UI] Iniciando módulo...');
 
 import { obtenerEventos, crearEvento, actualizarEvento, eliminarEvento, validarEvento } from './calendario-escolar.js';
-import { mostrarError, mostrarExito } from '../auth.js';
+import { supabase, mostrarError, mostrarExito } from '../auth.js';
 
 console.log('[Calendario UI] Imports completados');
 
@@ -137,14 +137,25 @@ export async function cargarEventosCalendario(container) {
                     modo: 'crear'
                 });
             },
-            eventClick: function(info) {
-                mostrarModalEvento({
-                    id: info.event.id,
-                    descripcion: info.event.title,
-                    fecha: info.event.start,
-                    tipo_evento: info.event.extendedProps.tipo,
-                    modo: 'editar'
-                });
+            eventClick: async function(info) {
+                // Obtener el evento completo de la base de datos
+                const { data: eventos } = await supabase
+                    .from('calendario_escolar')
+                    .select('*')
+                    .eq('id', info.event.id)
+                    .single();
+
+                if (eventos) {
+                    mostrarModalEvento({
+                        id: eventos.id,
+                        titulo: eventos.titulo,
+                        descripcion: eventos.descripcion,
+                        fecha_inicio: eventos.fecha_inicio,
+                        fecha_fin: eventos.fecha_fin,
+                        tipo_evento: eventos.tipo_evento,
+                        modo: 'editar'
+                    });
+                }
             },
             eventDrop: async function(info) {
                 try {
