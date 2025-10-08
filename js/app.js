@@ -158,8 +158,9 @@ async function cargarCursos() {
 
 // Función para ver el horario de un curso específico
 window.verHorarioCurso = function(nombreCurso) {
-    // Redireccionar al horario con el curso como parámetro
-    window.location.href = `ejemplos/horario/index.html?curso=${encodeURIComponent(nombreCurso)}`;
+    // Redireccionar al horario con el curso como parámetro, asegurando el formato correcto
+    const cursoFormateado = nombreCurso.replace('º', '').replace('°', ''); // Elimina º o ° si existen
+    window.location.href = `ejemplos/horario/index.html?curso=${encodeURIComponent(cursoFormateado)}`;
 };
 
 // Inicializar la página

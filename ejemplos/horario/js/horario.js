@@ -14,27 +14,37 @@ async function cargarDatos() {
         // Obtener el curso de la URL
         cursoActual = obtenerParametroURL('curso');
         
-        let query = supabase
+        // Primero obtener el id del horario para el curso
+        const { data: horarioCabecera, error: errorCabecera } = await supabase
             .from('horario')
-            .select('*')
-            .order('id', { ascending: true });
-            
-        // Si hay un curso específico, filtrar por él
-        if (cursoActual) {
-            query = query.eq('curso', cursoActual);
+            .select('id, curso, anio')
+            .eq('curso', cursoActual)
+            .single();
+
+        if (errorCabecera) throw errorCabecera;
+
+        if (!horarioCabecera) {
+            throw new Error('No se encontró el horario para este curso');
         }
 
-        const response = await query;
-        if (response.error) throw response.error;
+        // Obtener los detalles del horario
+        const { data: detalles, error: errorDetalles } = await supabase
+            .from('horario_escolar')
+            .select('*')
+            .eq('id_horario', horarioCabecera.id)
+            .order('dia_semana', { ascending: true })
+            .order('hora_inicio', { ascending: true });
+
+        if (errorDetalles) throw errorDetalles;
         
-        horarioData = response.data;
+        horarioData = detalles;
         
         // Actualizar el título con el curso actual
         if (cursoActual) {
             const subtitleElement = document.getElementById('curso-nivel');
-            if (subtitleElement) {
-                const primerRegistro = horarioData[0] || {};
-                subtitleElement.textContent = `${cursoActual} - ${primerRegistro.nivel || ''}`;
+            if (subtitleElement && horarioData.length > 0) {
+                const primerRegistro = horarioData[0];
+                subtitleElement.textContent = `${cursoActual} - ${primerRegistro.nivel || ''} - Año ${horarioCabecera.anio}`;
             }
         }
         
