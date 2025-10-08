@@ -325,7 +325,7 @@ async function mostrarDetalleHorario(horario) {
                 turno
             `)
             .eq('id_horario', horario.id)
-            .order('dia_semana', { ascending: true })
+            .order('id', { ascending: true })
             .order('hora_inicio', { ascending: true });
 
         if (error) throw error;
