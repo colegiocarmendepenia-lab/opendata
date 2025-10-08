@@ -105,19 +105,27 @@ window.verDetalles = async function(id) {
 // Función para cargar cursos en el menú
 async function cargarCursos() {
     try {
+        console.log('Iniciando carga de cursos...');
         const { data: cursos, error } = await supabase
             .from('horario')
-            .select('id, curso, anio')
-            .order('curso')
-            .limit(100);
+            .select('*');
 
         if (error) throw error;
 
+        console.log('Datos recibidos de Supabase:', cursos);
+
+        if (!cursos || cursos.length === 0) {
+            console.log('No se encontraron cursos en la base de datos');
+            return;
+        }
+
         // Eliminar duplicados usando Set y filtrar valores nulos
         const cursosUnicos = [...new Set(cursos
-            .filter(c => c.curso) // Filtrar cursos null o vacíos
+            .filter(c => c.curso && c.curso.trim() !== '') // Filtrar cursos null, vacíos o solo espacios
             .map(c => c.curso))]
             .sort(); // Ordenar alfabéticamente
+
+        console.log('Cursos únicos encontrados:', cursosUnicos);
 
         const menuCursos = document.getElementById('listaCursos');
         if (!menuCursos) return;
