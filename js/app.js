@@ -106,18 +106,18 @@ window.verDetalles = async function(id) {
 async function cargarCursos() {
     try {
         const { data: cursos, error } = await supabase
-            .from('horario_escolar')
-            .select('curso_id(id, nombre)')
-            .order('curso_id')
+            .from('horario')
+            .select('id, curso, anio')
+            .order('curso')
             .limit(100);
 
         if (error) throw error;
 
-        // Eliminar duplicados usando Set
-        const cursosUnicos = [...new Set(cursos.map(c => JSON.stringify({ 
-            id: c.curso_id.id, 
-            nombre: c.curso_id.nombre 
-        })))].map(str => JSON.parse(str));
+        // Eliminar duplicados usando Set y filtrar valores nulos
+        const cursosUnicos = [...new Set(cursos
+            .filter(c => c.curso) // Filtrar cursos null o vacíos
+            .map(c => c.curso))]
+            .sort(); // Ordenar alfabéticamente
 
         const menuCursos = document.getElementById('listaCursos');
         if (!menuCursos) return;
@@ -131,8 +131,8 @@ async function cargarCursos() {
 
         menuCursos.innerHTML = cursosUnicos.map(curso => `
             <li>
-                <a class="dropdown-item" href="#" onclick="verHorarioCurso('${curso.id}')">
-                    <i class="bi bi-mortarboard-fill"></i> ${curso.nombre}
+                <a class="dropdown-item" href="#" onclick="verHorarioCurso('${curso}')">
+                    <i class="bi bi-mortarboard-fill"></i> ${curso}
                 </a>
             </li>
         `).join('');
@@ -149,20 +149,13 @@ async function cargarCursos() {
 }
 
 // Función para ver el horario de un curso específico
-window.verHorarioCurso = async function(cursoId) {
+window.verHorarioCurso = async function(nombreCurso) {
     try {
         const { data: horarios, error } = await supabase
-            .from('horario_escolar')
-            .select(`
-                *,
-                curso_id(nombre),
-                asignatura_id(nombre),
-                docente_id(nombre, apellido)
-            `)
-            .eq('curso_id', cursoId)
-            .order('dia_semana');
-
-        if (error) throw error;
+            .from('horario')
+            .select('*')
+            .eq('curso', nombreCurso)
+            .order('created_at');
 
         // Aquí podrías mostrar el horario en un modal o en una nueva sección
         // Por ahora solo mostraremos un mensaje
