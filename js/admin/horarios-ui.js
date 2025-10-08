@@ -4,7 +4,7 @@ import { supabase, mostrarError, mostrarExito } from '../auth.js';
 console.log('[Horarios UI] Iniciando módulo de interfaz de horarios...');
 
 // Versión del módulo UI
-const VERSION = '1.0.37';
+const VERSION = '1.0.38';
 
 // Función para cargar la interfaz de horarios
 export async function cargarHorariosUI(container) {
@@ -400,10 +400,10 @@ async function mostrarEstudiantesHorario(horario) {
                 codigo_estudiante,
                 grado,
                 seccion,
-                personas!estudiantes_persona_id_fkey(
+                personas:persona_id(
                     id,
-                    nombres,
-                    apellidos
+                    nombre,
+                    apellido
                 )
             `)
             .eq('id_horario', horario.id)
@@ -427,7 +427,7 @@ async function mostrarEstudiantesHorario(horario) {
                 <td>${estudiante.grado}</td>
                 <td>${estudiante.seccion}</td>
                 <td>${estudiante.personas ? 
-                    `${estudiante.personas.nombres} ${estudiante.personas.apellidos}` : 
+                    `${estudiante.personas.nombre} ${estudiante.personas.apellido}` : 
                     'No especificado'}</td>
                 <td>
                     <button class="btn btn-sm btn-outline-danger btn-desasignar-estudiante" 
