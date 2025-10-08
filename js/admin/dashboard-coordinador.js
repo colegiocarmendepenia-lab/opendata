@@ -3,7 +3,7 @@ import { cargarEventosCalendario } from './calendario-ui.js';
 import { cargarPublicacionesUI } from './publicaciones-ui.js';
 import { cargarHorariosUI } from './horarios-ui.js';
 
-const VERSION = '1.0.17';
+const VERSION = '1.0.18';
 
 // Inicializar Supabase
 const SUPABASE_URL = 'https://yjrrtufenyfuhdycueyo.supabase.co';
@@ -492,7 +492,8 @@ async function cargarAsistencias(container, puedeEditar) {
 async function handleLogout() {
     try {
         await supabase.auth.signOut();
-        window.location.href = '/login.html';
+        // Usar ruta relativa desde la ubicación actual
+        window.location.href = '../../login.html';
     } catch (error) {
         console.error('Error al cerrar sesión:', error);
         mostrarError('Error al cerrar sesión');
