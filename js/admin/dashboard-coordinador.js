@@ -3,6 +3,7 @@ import { cargarEventosCalendario } from './calendario-ui.js';
 import { cargarPublicacionesUI } from './publicaciones-ui.js';
 import { cargarHorariosUI } from './horarios-ui.js';
 import { inicializarModuloImagenes } from './imagenes.js';
+import { cargarCalificaciones } from './modules/calificaciones.js';
 
 const VERSION = '1.0.20';
 
@@ -131,7 +132,7 @@ async function cargarSeccion(seccion) {
                 await inicializarModuloImagenes(mainContent);
                 break;
             case 'calificaciones':
-                await cargarCalificaciones(mainContent, false); // Solo lectura
+                await cargarCalificaciones(mainContent);
                 break;
             case 'asistencias':
                 await cargarAsistencias(mainContent, false); // Solo lectura
@@ -156,10 +157,7 @@ async function cargarHorarios(container, puedeEditar) {
     await cargarHorariosUI(container);
 }
 
-async function cargarCalificaciones(container, puedeEditar) {
-    try {
-        // Preparar la interfaz
-        container.innerHTML = `
+// Función de calificaciones eliminada - ahora importada desde modules/calificaciones.js
             <div class="card">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h5 class="mb-0">Control de Calificaciones</h5>
