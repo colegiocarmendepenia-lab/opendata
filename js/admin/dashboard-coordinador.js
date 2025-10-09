@@ -4,7 +4,7 @@ import { cargarPublicacionesUI } from './publicaciones-ui.js';
 import { cargarHorariosUI } from './horarios-ui.js';
 import { inicializarModuloImagenes } from './imagenes.js';
 
-const VERSION = '1.0.19';
+const VERSION = '1.0.20';
 
 // Inicializar Supabase
 const SUPABASE_URL = 'https://yjrrtufenyfuhdycueyo.supabase.co';
@@ -234,14 +234,14 @@ async function cargarCalificaciones(container, puedeEditar) {
         `;
 
         // Cargar datos iniciales
-        const [cursos, asignaturas, evaluaciones, calificaciones] = await Promise.all([
+        const [cursos, materias, evaluaciones, calificaciones] = await Promise.all([
             supabase.from('cursos').select('*').order('nombre'),
-            supabase.from('asignaturas').select('*').order('nombre'),
+            supabase.from('materias').select('*').order('nombre'),
             supabase.from('evaluaciones').select('*').order('fecha'),
             supabase.from('calificaciones').select(`
                 *,
-                alumno:alumno_id(nombre, apellido, curso_id),
-                asignatura:asignatura_id(nombre),
+                estudiante:estudiante_id(nombre, apellido, curso_id),
+                materia:materia_id(nombre),
                 evaluacion:evaluacion_id(nombre)
             `).order('fecha', { ascending: false })
         ]);

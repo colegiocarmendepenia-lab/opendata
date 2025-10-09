@@ -23,9 +23,9 @@ async function mostrarModalCalificacion(calificacionId = null) {
 
     try {
         // Cargar datos necesarios
-        const [cursos, asignaturas, evaluaciones] = await Promise.all([
+        const [cursos, materias, evaluaciones] = await Promise.all([
             supabase.from('cursos').select('*').order('nombre'),
-            supabase.from('asignaturas').select('*').order('nombre'),
+            supabase.from('materias').select('*').order('nombre'),
             supabase.from('evaluaciones').select('*').order('fecha')
         ]);
 
@@ -37,7 +37,7 @@ async function mostrarModalCalificacion(calificacionId = null) {
         document.getElementById('cursoCalificacion')?.addEventListener('change', async function() {
             if (this.value) {
                 const { data: alumnos } = await supabase
-                    .from('alumnos')
+                    .from('estudiantes')
                     .select('*')
                     .eq('curso_id', this.value)
                     .order('apellido');
