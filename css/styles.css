@@ -18,6 +18,12 @@
     padding: 0;
 }
 
+.navbar-brand-text {
+    font-size: 1.5rem;
+    font-weight: 500;
+    color: white;
+}
+
 .hero-section {
     background: linear-gradient(rgba(27, 58, 107, 0.8), rgba(27, 58, 107, 0.9)), url('https://images.unsplash.com/photo-1523050854058-8df90110c9f1?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=MnwxfDB8MXxyYW5kb218MHx8c2Nob29sfHx8fHx8MTY5ODg0NjQ0MA&ixlib=rb-4.0.3&q=80&utm_campaign=api-credit&utm_medium=referral&utm_source=unsplash_source&w=1080');
     background-size: cover;

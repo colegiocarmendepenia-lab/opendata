@@ -163,10 +163,62 @@ window.verHorarioCurso = function(nombreCurso) {
     window.location.href = `ejemplos/horario/index.html?curso=${encodeURIComponent(cursoFormateado)}`;
 };
 
+// Función para cargar eventos del calendario
+async function cargarEventosCalendario() {
+    try {
+        const { data, error } = await supabase
+            .from('calendario_escolar')
+            .select('*')
+            .order('fecha', { ascending: true });
+
+        if (error) throw error;
+
+        const container = document.getElementById('calendario-container');
+        if (!container) return;
+
+        if (!data || data.length === 0) {
+            container.innerHTML = `
+                <div class="list-group-item">
+                    <p class="mb-1 text-center">No hay eventos programados.</p>
+                </div>
+            `;
+            return;
+        }
+
+        container.innerHTML = data.map(evento => {
+            const fecha = new Date(evento.fecha).toLocaleDateString('es-ES', {
+                day: 'numeric',
+                month: 'long'
+            });
+            return `
+                <div class="list-group-item">
+                    <div class="d-flex w-100 justify-content-between">
+                        <h5 class="mb-1">${evento.titulo}</h5>
+                        <small>${fecha}</small>
+                    </div>
+                    <p class="mb-1">${evento.descripcion}</p>
+                </div>
+            `;
+        }).join('');
+
+    } catch (error) {
+        console.error('Error al cargar eventos del calendario:', error);
+        const container = document.getElementById('calendario-container');
+        if (container) {
+            container.innerHTML = `
+                <div class="list-group-item">
+                    <p class="mb-1 text-center text-danger">Error al cargar los eventos. Por favor, intenta más tarde.</p>
+                </div>
+            `;
+        }
+    }
+}
+
 // Inicializar la página
 document.addEventListener('DOMContentLoaded', () => {
     cargarAvisos();
     cargarCursos();
+    cargarEventosCalendario();
 
     // Configurar los filtros
     document.querySelectorAll('.btn-outline-primary').forEach(button => {
