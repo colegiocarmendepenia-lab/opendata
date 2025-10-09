@@ -167,25 +167,13 @@ window.verHorarioCurso = function(nombreCurso) {
 async function cargarEventosCalendario() {
     try {
         console.log('Iniciando carga de eventos del calendario...');
-        
-        // Primero verificamos si podemos conectar con la tabla
-        const { data: testData, error: testError } = await supabase
-            .from('eventos')
-            .select('id')
-            .limit(1);
-            
-        if (testError) {
-            console.error('Error de conexión con Supabase:', testError);
-            throw new Error('Error de conexión con la base de datos');
-        }
-        
-        console.log('Conexión con Supabase verificada, consultando eventos...');
 
-        // Intentamos obtener los eventos
+        // Consultamos los eventos activos
         const { data, error } = await supabase
-            .from('eventos')  // Cambiamos el nombre de la tabla
-            .select('id, titulo, descripcion, fecha')
-            .order('fecha', { ascending: true });
+            .from('calendario_escolar')
+            .select('id, titulo, descripcion, fecha_inicio, fecha_fin, tipo_evento')
+            .eq('estado', 'activo')
+            .order('fecha_inicio', { ascending: true });
 
         if (error) {
             console.error('Error al consultar eventos:', error);
@@ -210,17 +198,33 @@ async function cargarEventosCalendario() {
         }
 
         container.innerHTML = data.map(evento => {
-            const fecha = new Date(evento.fecha).toLocaleDateString('es-ES', {
+            const fechaInicio = new Date(evento.fecha_inicio).toLocaleDateString('es-ES', {
                 day: 'numeric',
                 month: 'long'
             });
+            const fechaFin = new Date(evento.fecha_fin).toLocaleDateString('es-ES', {
+                day: 'numeric',
+                month: 'long'
+            });
+            
+            // Formatear el rango de fechas
+            const fechaTexto = fechaInicio === fechaFin 
+                ? fechaInicio 
+                : `${fechaInicio} - ${fechaFin}`;
+
+            // Formatear el tipo de evento
+            const tipoEvento = evento.tipo_evento.charAt(0).toUpperCase() + evento.tipo_evento.slice(1);
+
             return `
                 <div class="list-group-item">
                     <div class="d-flex w-100 justify-content-between">
                         <h5 class="mb-1">${evento.titulo || 'Sin título'}</h5>
-                        <small>${fecha}</small>
+                        <small>${fechaTexto}</small>
                     </div>
                     <p class="mb-1">${evento.descripcion || 'Sin descripción'}</p>
+                    <small class="text-muted">
+                        <span class="badge bg-secondary">${tipoEvento}</span>
+                    </small>
                 </div>
             `;
         }).join('');
