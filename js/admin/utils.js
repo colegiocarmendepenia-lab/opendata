@@ -1,5 +1,16 @@
 // Funciones de utilidad
 
+// Llenar select con opciones
+export function llenarSelect(selectElement, opciones, valorKey = 'id', textoKey = 'nombre') {
+    selectElement.innerHTML = '<option value="">Seleccione...</option>';
+    opciones.forEach(opcion => {
+        const option = document.createElement('option');
+        option.value = typeof valorKey === 'function' ? valorKey(opcion) : opcion[valorKey];
+        option.textContent = typeof textoKey === 'function' ? textoKey(opcion) : opcion[textoKey];
+        selectElement.appendChild(option);
+    });
+}
+
 // Formatear fecha para inputs
 export function formatearFecha(fecha) {
     return fecha ? new Date(fecha).toISOString().split('T')[0] : '';

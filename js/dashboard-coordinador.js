@@ -24,7 +24,7 @@ function llenarSelect(selectElement, opciones, valorKey = 'id', textoKey = 'nomb
 async function cargarMaterias() {
     try {
         const { data: materias, error } = await supabase
-            .from('asignaturas')
+            .from('materias')
             .select('*')
             .order('nombre', { ascending: true });
 
@@ -32,29 +32,25 @@ async function cargarMaterias() {
 
         const selectMateria = document.getElementById('materia-select');
         if (selectMateria) {
-            llenarSelect(selectMateria, materias);
+            llenarSelect(selectMateria, materias, 'nombre', 'nombre');
         }
     } catch (error) {
-        mostrarError('Error al cargar asignaturas: ' + error.message);
+        mostrarError('Error al cargar materias: ' + error.message);
     }
 }
 
-// Función para cargar las evaluaciones
-async function cargarEvaluaciones() {
-    try {
-        const { data: evaluaciones, error } = await supabase
-            .from('evaluaciones')
-            .select('*')
-            .order('nombre', { ascending: true });
-
-        if (error) throw error;
-
-        const selectEvaluacion = document.getElementById('periodo-select');
-        if (selectEvaluacion) {
-            llenarSelect(selectEvaluacion, evaluaciones);
-        }
-    } catch (error) {
-        mostrarError('Error al cargar evaluaciones: ' + error.message);
+// Función para cargar los períodos
+function cargarPeriodos() {
+    const periodos = ['Primer Periodo', 'Segundo Periodo', 'Tercer Periodo', 'Cuarto Periodo'];
+    const selectPeriodo = document.getElementById('periodo-select');
+    if (selectPeriodo) {
+        selectPeriodo.innerHTML = '<option value="">Seleccione un período...</option>';
+        periodos.forEach(periodo => {
+            const option = document.createElement('option');
+            option.value = periodo;
+            option.textContent = periodo;
+            selectPeriodo.appendChild(option);
+        });
     }
 }
 
@@ -88,6 +84,8 @@ async function cargarEstudiantes() {
     }
 }
 
+import { mostrarError, mostrarExito, llenarSelect } from './utils.js';
+
 // Función para cargar calificaciones
 async function cargarCalificaciones() {
     try {
@@ -96,8 +94,8 @@ async function cargarCalificaciones() {
             .select(`
                 id,
                 estudiante_id,
-                asignatura_id,
-                evaluacion_id,
+                materia,
+                periodo,
                 nota,
                 fecha_registro,
                 estudiantes:estudiante_id (
@@ -108,12 +106,6 @@ async function cargarCalificaciones() {
                         nombre,
                         apellido
                     )
-                ),
-                asignaturas:asignatura_id (
-                    nombre
-                ),
-                evaluaciones:evaluacion_id (
-                    nombre
                 )
             `)
             .order('fecha_registro', { ascending: false });
@@ -154,11 +146,11 @@ async function agregarCalificacion(event) {
     event.preventDefault();
     
     const estudiante_id = document.getElementById('estudiante-select').value;
-    const evaluacion_id = document.getElementById('periodo-select').value;
-    const asignatura_id = document.getElementById('materia-select').value;
+    const periodo = document.getElementById('periodo-select').value;
+    const materia = document.getElementById('materia-select').value;
     const nota = parseFloat(document.getElementById('nota-input').value);
 
-    if (!estudiante_id || !evaluacion_id || !asignatura_id || isNaN(nota)) {
+    if (!estudiante_id || !periodo || !materia || isNaN(nota)) {
         mostrarError('Por favor complete todos los campos');
         return;
     }
@@ -174,8 +166,8 @@ async function agregarCalificacion(event) {
             .insert([
                 { 
                     estudiante_id,
-                    evaluacion_id,
-                    asignatura_id,
+                    periodo,
+                    materia,
                     nota,
                     fecha_registro: new Date().toISOString().split('T')[0]
                 }
@@ -249,18 +241,39 @@ function mostrarMensajeExito(mensaje) {
 }
 
 // Inicialización
-document.addEventListener('DOMContentLoaded', async () => {
-    // Cargar datos iniciales
-    await Promise.all([
-        cargarEstudiantes(),
-        cargarMaterias(),
-        cargarCalificaciones()
-    ]);
-    cargarPeriodos();
+async function inicializarSeccionCalificaciones() {
+    try {
+        // Cargar datos iniciales
+        await Promise.all([
+            cargarEstudiantes(),
+            cargarMaterias()
+        ]);
+        cargarPeriodos();
+        await cargarCalificaciones();
 
-    // Configurar el formulario
-    const formCalificacion = document.getElementById('form-calificacion');
-    if (formCalificacion) {
-        formCalificacion.addEventListener('submit', agregarCalificacion);
+        // Configurar el formulario
+        const formCalificacion = document.getElementById('form-calificacion');
+        if (formCalificacion) {
+            formCalificacion.addEventListener('submit', agregarCalificacion);
+        }
+
+        // Configurar filtros
+        const filtros = ['estudiante-select', 'periodo-select', 'materia-select'];
+        filtros.forEach(id => {
+            const elemento = document.getElementById(id);
+            if (elemento) {
+                elemento.addEventListener('change', cargarCalificaciones);
+            }
+        });
+
+        const notaInput = document.getElementById('nota-input');
+        if (notaInput) {
+            notaInput.addEventListener('input', cargarCalificaciones);
+        }
+    } catch (error) {
+        mostrarError('Error al inicializar la sección de calificaciones: ' + error.message);
     }
-});
+}
+
+// Exportar función de inicialización
+export { inicializarSeccionCalificaciones };
