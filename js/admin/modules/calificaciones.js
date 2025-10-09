@@ -17,6 +17,7 @@ export async function cargarCalificaciones(container) {
                                 <tr>
                                     <th>Fecha</th>
                                     <th>Estudiante</th>
+                                    <th>Curso</th>
                                     <th>Periodo</th>
                                     <th>Materia</th>
                                     <th>Nota</th>
@@ -42,7 +43,15 @@ export async function cargarCalificaciones(container) {
             .from('calificaciones')
             .select(`
                 *,
-                persona:estudiante_id(nombre, apellido)
+                estudiante:estudiante_id (
+                    codigo_estudiante,
+                    grado,
+                    seccion,
+                    persona:persona_id (
+                        nombre,
+                        apellido
+                    )
+                )
             `)
             .order('fecha_registro', { ascending: false });
 
@@ -52,7 +61,10 @@ export async function cargarCalificaciones(container) {
         new DataTable('#tablaCalificaciones', {
             data: calificaciones.map(c => ({
                 fecha: new Date(c.fecha_registro).toLocaleDateString(),
-                estudiante: c.persona ? `${c.persona.apellido}, ${c.persona.nombre}` : 'No asignado',
+                estudiante: c.estudiante?.persona ? 
+                    `${c.estudiante.persona.apellido}, ${c.estudiante.persona.nombre} (${c.estudiante.codigo_estudiante})` : 
+                    'No asignado',
+                curso: c.estudiante ? `${c.estudiante.grado}° ${c.estudiante.seccion}` : '-',
                 periodo: c.periodo,
                 materia: c.materia,
                 nota: formatearNota(c.nota)
@@ -60,6 +72,7 @@ export async function cargarCalificaciones(container) {
             columns: [
                 { data: 'fecha' },
                 { data: 'estudiante' },
+                { data: 'curso' },
                 { data: 'periodo' },
                 { data: 'materia' },
                 { data: 'nota' }
@@ -85,5 +98,5 @@ export async function cargarCalificaciones(container) {
 // Función auxiliar para formatear notas
 function formatearNota(nota) {
     if (typeof nota !== 'number') return '--';
-    return `<span class="badge ${nota >= 40 ? 'bg-success' : 'bg-danger'}">${nota}</span>`;
+    return `<span class="badge ${nota >= 60 ? 'bg-success' : 'bg-danger'}">${nota}%</span>`;
 }
