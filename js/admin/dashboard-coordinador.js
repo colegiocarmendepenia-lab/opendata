@@ -1,13 +1,6 @@
 // Dashboard Coordinador
 import { cargarEventosCalendario } from './calendario-ui.js';
-import { cargarPublicacionesUI } fr                await cargarHorarios(container, puedeEditar);
-                break;
-            case 'imagenes':
-                await inicializarModuloImagenes(mainContent);
-                break;
-            case 'calificaciones':
-                await cargarCalificaciones(mainContent, false); // Solo lectura
-                break;/publicaciones-ui.js';
+import { cargarPublicacionesUI } from './publicaciones-ui.js';
 import { cargarHorariosUI } from './horarios-ui.js';
 import { inicializarModuloImagenes } from './imagenes.js';
 
@@ -130,6 +123,9 @@ async function cargarSeccion(seccion) {
                 break;
             case 'horarios':
                 await cargarHorarios(mainContent, puedeEditar);
+                break;
+            case 'imagenes':
+                await inicializarModuloImagenes(mainContent);
                 break;
             case 'calificaciones':
                 await cargarCalificaciones(mainContent, false); // Solo lectura
