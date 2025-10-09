@@ -166,15 +166,39 @@ window.verHorarioCurso = function(nombreCurso) {
 // Función para cargar eventos del calendario
 async function cargarEventosCalendario() {
     try {
+        console.log('Iniciando carga de eventos del calendario...');
+        
+        // Primero verificamos si podemos conectar con la tabla
+        const { data: testData, error: testError } = await supabase
+            .from('eventos')
+            .select('id')
+            .limit(1);
+            
+        if (testError) {
+            console.error('Error de conexión con Supabase:', testError);
+            throw new Error('Error de conexión con la base de datos');
+        }
+        
+        console.log('Conexión con Supabase verificada, consultando eventos...');
+
+        // Intentamos obtener los eventos
         const { data, error } = await supabase
-            .from('calendario_escolar')
-            .select('*')
+            .from('eventos')  // Cambiamos el nombre de la tabla
+            .select('id, titulo, descripcion, fecha')
             .order('fecha', { ascending: true });
 
-        if (error) throw error;
+        if (error) {
+            console.error('Error al consultar eventos:', error);
+            throw error;
+        }
+
+        console.log('Datos de eventos recibidos:', data);
 
         const container = document.getElementById('calendario-container');
-        if (!container) return;
+        if (!container) {
+            console.error('No se encontró el contenedor del calendario');
+            return;
+        }
 
         if (!data || data.length === 0) {
             container.innerHTML = `
@@ -193,10 +217,10 @@ async function cargarEventosCalendario() {
             return `
                 <div class="list-group-item">
                     <div class="d-flex w-100 justify-content-between">
-                        <h5 class="mb-1">${evento.titulo}</h5>
+                        <h5 class="mb-1">${evento.titulo || 'Sin título'}</h5>
                         <small>${fecha}</small>
                     </div>
-                    <p class="mb-1">${evento.descripcion}</p>
+                    <p class="mb-1">${evento.descripcion || 'Sin descripción'}</p>
                 </div>
             `;
         }).join('');
@@ -249,99 +273,3 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 });
-async function handleLogin(email, password) {
-    const { data, error } = await supabase.auth.signInWithPassword({
-        email: email,
-        password: password,
-    });
-
-    if (error) {
-        alert('Error de autenticación: ' + error.message);
-        return;
-    }
-
-    // Éxito: data.user contiene el usuario logueado.
-    console.log('Usuario autenticado:', data.user);
-    alert('¡Login exitoso!');
-
-    // Siguiente paso clave: Obtener el rol y redirigir
-    await obtenerRolYRedirigir(data.user.id);
-}
-
-// Función para obtener el rol del usuario de nuestra tabla 'usuarios'
-async function obtenerRolYRedirigir(userId) {
-    const { data, error } = await supabase
-        .from('usuarios')
-        .select('rol')
-        .eq('id', userId)
-        .single(); // Esperamos solo un resultado
-
-    if (error) {
-        console.error('Error al obtener el rol:', error);
-        // Desconectar si no se encuentra el rol (medida de seguridad)
-        await supabase.auth.signOut();
-        alert('Usuario no tiene un rol asignado. Por favor, contacte a soporte.');
-        return;
-    }
-
-    const rol = data.rol;
-    console.log('Rol del usuario:', rol);
-
-    // **Tarea de redirección:** Crea estos archivos .html
-    if (rol === 'admin') {
-        window.location.href = './admin-dashboard.html';
-    } else if (rol === 'padre') {
-        window.location.href = './padre-dashboard.html';
-    } else if (rol === 'estudiante') {
-        window.location.href = './estudiante-dashboard.html';
-    }
-}
-
-// app.js (Continuación)
-async function handleLogin(email, password) {
-    const { data, error } = await supabase.auth.signInWithPassword({
-        email: email,
-        password: password,
-    });
-
-    if (error) {
-        alert('Error de autenticación: ' + error.message);
-        return;
-    }
-
-    // Éxito: data.user contiene el usuario logueado.
-    console.log('Usuario autenticado:', data.user);
-    alert('¡Login exitoso!');
-
-    // Siguiente paso clave: Obtener el rol y redirigir
-    await obtenerRolYRedirigir(data.user.id);
-}
-
-// Función para obtener el rol del usuario de nuestra tabla 'usuarios'
-async function obtenerRolYRedirigir(userId) {
-    const { data, error } = await supabase
-        .from('usuarios')
-        .select('rol')
-        .eq('id', userId)
-        .single(); // Esperamos solo un resultado
-
-    if (error) {
-        console.error('Error al obtener el rol:', error);
-        // Desconectar si no se encuentra el rol (medida de seguridad)
-        await supabase.auth.signOut();
-        alert('Usuario no tiene un rol asignado. Por favor, contacte a soporte.');
-        return;
-    }
-
-    const rol = data.rol;
-    console.log('Rol del usuario:', rol);
-
-    // **Tarea de redirección:** Crea estos archivos .html
-    if (rol === 'admin') {
-        window.location.href = './admin-dashboard.html';
-    } else if (rol === 'padre') {
-        window.location.href = './padre-dashboard.html';
-    } else if (rol === 'estudiante') {
-        window.location.href = './estudiante-dashboard.html';
-    }
-}
