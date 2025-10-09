@@ -98,5 +98,27 @@ export async function cargarCalificaciones(container) {
 // Función auxiliar para formatear notas
 function formatearNota(nota) {
     if (typeof nota !== 'number') return '--';
-    return `<span class="badge ${nota >= 60 ? 'bg-success' : 'bg-danger'}">${nota}%</span>`;
+    
+    let colorClass;
+    switch (Math.floor(nota)) {
+        case 1:
+            colorClass = 'bg-danger';    // rojo
+            break;
+        case 2:
+            colorClass = 'bg-warning text-dark';    // naranja
+            break;
+        case 3:
+            colorClass = 'bg-info text-dark';    // amarillo
+            break;
+        case 4:
+            colorClass = 'bg-success';   // verde
+            break;
+        case 5:
+            colorClass = 'bg-primary';   // azul
+            break;
+        default:
+            colorClass = 'bg-secondary';
+    }
+    
+    return `<span class="badge ${colorClass}">${nota}</span>`;
 }
