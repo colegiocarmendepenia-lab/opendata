@@ -228,13 +228,13 @@ async function cargarEventosCalendario() {
                     const tipoEvento = evento.tipo_evento.charAt(0).toUpperCase() + evento.tipo_evento.slice(1);
 
                     return `
-                        <li title="${evento.descripcion || 'Sin descripción'}">
+                        <li class="event-${evento.tipo_evento}" title="${evento.descripcion || 'Sin descripción'}">
                             <div class="d-flex justify-content-between align-items-start">
                                 <div>
                                     <div class="fw-semibold">${evento.titulo}</div>
                                     <div class="event-date">${fechaTexto}</div>
                                 </div>
-                                <span class="event-type">${tipoEvento}</span>
+                                <span class="event-type event-type-${evento.tipo_evento}">${tipoEvento}</span>
                             </div>
                         </li>
                     `;
