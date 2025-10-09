@@ -1,4 +1,6 @@
 // Módulo de galería
+import { supabase } from './supabase.js';
+
 console.log('[Galería] Iniciando módulo...');
 
 let categoriaActual = 'todas';
