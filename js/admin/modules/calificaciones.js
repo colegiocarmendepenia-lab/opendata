@@ -99,26 +99,29 @@ export async function cargarCalificaciones(container) {
 function formatearNota(nota) {
     if (typeof nota !== 'number') return '--';
     
-    let colorClass;
-    switch (Math.floor(nota)) {
+    // Estilo común para todas las badges
+    const baseStyle = 'badge fw-bold';
+    let colorStyle;
+    
+    switch (Math.round(nota)) {
         case 1:
-            colorClass = 'bg-danger';    // rojo
+            colorStyle = 'background-color: #dc3545'; // Rojo
             break;
         case 2:
-            colorClass = 'bg-warning text-dark';    // naranja
+            colorStyle = 'background-color: #fd7e14'; // Naranja
             break;
         case 3:
-            colorClass = 'bg-info text-dark';    // amarillo
+            colorStyle = 'background-color: #ffc107; color: #000'; // Amarillo
             break;
         case 4:
-            colorClass = 'bg-success';   // verde
+            colorStyle = 'background-color: #198754'; // Verde
             break;
         case 5:
-            colorClass = 'bg-primary';   // azul
+            colorStyle = 'background-color: #0d6efd'; // Azul
             break;
         default:
-            colorClass = 'bg-secondary';
+            colorStyle = 'background-color: #6c757d'; // Gris para otros valores
     }
     
-    return `<span class="badge ${colorClass}">${nota}</span>`;
+    return `<span class="${baseStyle}" style="${colorStyle}">${nota}</span>`;
 }
