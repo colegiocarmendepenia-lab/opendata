@@ -1,4 +1,6 @@
 // Módulo de calificaciones
+import { supabase } from '../supabase.js';
+
 export async function cargarCalificaciones(container) {
     try {
         // Preparar la interfaz
