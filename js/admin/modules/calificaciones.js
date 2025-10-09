@@ -42,7 +42,7 @@ export async function cargarCalificaciones(container) {
             .from('calificaciones')
             .select(`
                 *,
-                estudiante:estudiante_id(nombre, apellido)
+                persona:estudiante_id(nombre, apellido)
             `)
             .order('fecha_registro', { ascending: false });
 
@@ -52,7 +52,7 @@ export async function cargarCalificaciones(container) {
         new DataTable('#tablaCalificaciones', {
             data: calificaciones.map(c => ({
                 fecha: new Date(c.fecha_registro).toLocaleDateString(),
-                estudiante: c.estudiante ? `${c.estudiante.apellido}, ${c.estudiante.nombre}` : 'No asignado',
+                estudiante: c.persona ? `${c.persona.apellido}, ${c.persona.nombre}` : 'No asignado',
                 periodo: c.periodo,
                 materia: c.materia,
                 nota: formatearNota(c.nota)
