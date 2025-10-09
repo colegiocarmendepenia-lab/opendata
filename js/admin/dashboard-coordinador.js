@@ -1,9 +1,17 @@
 // Dashboard Coordinador
 import { cargarEventosCalendario } from './calendario-ui.js';
-import { cargarPublicacionesUI } from './publicaciones-ui.js';
+import { cargarPublicacionesUI } fr                await cargarHorarios(container, puedeEditar);
+                break;
+            case 'imagenes':
+                await inicializarModuloImagenes(mainContent);
+                break;
+            case 'calificaciones':
+                await cargarCalificaciones(mainContent, false); // Solo lectura
+                break;/publicaciones-ui.js';
 import { cargarHorariosUI } from './horarios-ui.js';
+import { inicializarModuloImagenes } from './imagenes.js';
 
-const VERSION = '1.0.18';
+const VERSION = '1.0.19';
 
 // Inicializar Supabase
 const SUPABASE_URL = 'https://yjrrtufenyfuhdycueyo.supabase.co';
