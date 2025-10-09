@@ -190,41 +190,63 @@ async function cargarEventosCalendario() {
 
         if (!data || data.length === 0) {
             container.innerHTML = `
-                <div class="list-group-item">
-                    <p class="mb-1 text-center">No hay eventos programados.</p>
+                <div class="text-center" style="grid-column: 1 / -1;">
+                    <p class="text-muted">No hay eventos programados.</p>
                 </div>
             `;
             return;
         }
 
-        container.innerHTML = data.map(evento => {
-            const fechaInicio = new Date(evento.fecha_inicio).toLocaleDateString('es-ES', {
-                day: 'numeric',
-                month: 'long'
-            });
-            const fechaFin = new Date(evento.fecha_fin).toLocaleDateString('es-ES', {
-                day: 'numeric',
-                month: 'long'
-            });
-            
-            // Formatear el rango de fechas
-            const fechaTexto = fechaInicio === fechaFin 
-                ? fechaInicio 
-                : `${fechaInicio} - ${fechaFin}`;
+        // Agrupar eventos por mes
+        const eventosPorMes = data.reduce((acc, evento) => {
+            const fecha = new Date(evento.fecha_inicio);
+            const mesKey = `${fecha.getFullYear()}-${fecha.getMonth()}`;
+            if (!acc[mesKey]) {
+                acc[mesKey] = {
+                    nombre: fecha.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' }),
+                    eventos: []
+                };
+            }
+            acc[mesKey].eventos.push(evento);
+            return acc;
+        }, {});
 
-            // Formatear el tipo de evento
-            const tipoEvento = evento.tipo_evento.charAt(0).toUpperCase() + evento.tipo_evento.slice(1);
+        // Ordenar los meses
+        const mesesOrdenados = Object.entries(eventosPorMes)
+            .sort(([keyA], [keyB]) => keyA.localeCompare(keyB))
+            .map(([_, datos]) => datos);
+
+        // Generar HTML para cada mes
+        container.innerHTML = mesesOrdenados.map(mes => {
+            const eventosHTML = mes.eventos
+                .sort((a, b) => new Date(a.fecha_inicio) - new Date(b.fecha_inicio))
+                .map(evento => {
+                    const fecha = new Date(evento.fecha_inicio);
+                    const fechaInicio = fecha.toLocaleDateString('es-ES', { day: 'numeric' });
+                    const fechaFin = new Date(evento.fecha_fin).toLocaleDateString('es-ES', { day: 'numeric' });
+                    const fechaTexto = fechaInicio === fechaFin ? fechaInicio : `${fechaInicio}-${fechaFin}`;
+                    const tipoEvento = evento.tipo_evento.charAt(0).toUpperCase() + evento.tipo_evento.slice(1);
+
+                    return `
+                        <li title="${evento.descripcion || 'Sin descripción'}">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <div class="fw-semibold">${evento.titulo}</div>
+                                    <div class="event-date">${fechaTexto}</div>
+                                </div>
+                                <span class="event-type">${tipoEvento}</span>
+                            </div>
+                        </li>
+                    `;
+                })
+                .join('');
 
             return `
-                <div class="list-group-item">
-                    <div class="d-flex w-100 justify-content-between">
-                        <h5 class="mb-1">${evento.titulo || 'Sin título'}</h5>
-                        <small>${fechaTexto}</small>
-                    </div>
-                    <p class="mb-1">${evento.descripcion || 'Sin descripción'}</p>
-                    <small class="text-muted">
-                        <span class="badge bg-secondary">${tipoEvento}</span>
-                    </small>
+                <div class="calendar-month">
+                    <h3>${mes.nombre}</h3>
+                    <ul class="event-list">
+                        ${eventosHTML}
+                    </ul>
                 </div>
             `;
         }).join('');
