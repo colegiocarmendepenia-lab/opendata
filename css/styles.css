@@ -138,6 +138,10 @@
     background-color: #6c757d !important; /* Gris */
 }
 
+.event-type-extracurricular {
+    background-color: #20c997 !important; /* Verde menta */
+}
+
 /* Colores para los bordes izquierdos de los eventos */
 .calendar-month .event-list li.event-feriado {
     border-left-color: #dc3545;
@@ -172,6 +176,63 @@
 .calendar-month .event-list li.event-conmemorativo {
     border-left-color: #6c757d;
     background-color: rgba(108, 117, 125, 0.1);
+}
+
+.calendar-month .event-list li.event-extracurricular {
+    border-left-color: #20c997;
+    background-color: rgba(32, 201, 151, 0.1);
+}
+
+/* Estilos para el modal de eventos */
+.event-modal .modal-header {
+    border-bottom: 3px solid;
+}
+
+.event-modal.event-feriado .modal-header {
+    border-bottom-color: #dc3545;
+}
+
+.event-modal.event-clase .modal-header {
+    border-bottom-color: #0d6efd;
+}
+
+.event-modal.event-evaluacion .modal-header {
+    border-bottom-color: #6f42c1;
+}
+
+.event-modal.event-reunion .modal-header {
+    border-bottom-color: #198754;
+}
+
+.event-modal.event-actividad .modal-header {
+    border-bottom-color: #fd7e14;
+}
+
+.event-modal.event-academico .modal-header {
+    border-bottom-color: #0dcaf0;
+}
+
+.event-modal.event-conmemorativo .modal-header {
+    border-bottom-color: #6c757d;
+}
+
+.event-modal.event-extracurricular .modal-header {
+    border-bottom-color: #20c997;
+}
+
+.event-details {
+    margin-top: 1rem;
+}
+
+.event-details .event-date {
+    color: #6c757d;
+    font-size: 0.9rem;
+    margin-bottom: 1rem;
+}
+
+.event-details .event-description {
+    white-space: pre-line;
+    margin-bottom: 1rem;
 }
 
 .calendar-loading {

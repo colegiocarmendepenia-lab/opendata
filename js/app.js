@@ -228,7 +228,8 @@ async function cargarEventosCalendario() {
                     const tipoEvento = evento.tipo_evento.charAt(0).toUpperCase() + evento.tipo_evento.slice(1);
 
                     return `
-                        <li class="event-${evento.tipo_evento}" title="${evento.descripcion || 'Sin descripción'}">
+                        <li class="event-${evento.tipo_evento}" data-bs-toggle="modal" data-bs-target="#eventoModal" 
+                            onclick="mostrarDetallesEvento(${JSON.stringify(evento).replace(/"/g, '&quot;')})">
                             <div class="d-flex justify-content-between align-items-start">
                                 <div>
                                     <div class="fw-semibold">${evento.titulo}</div>
@@ -269,6 +270,53 @@ document.addEventListener('DOMContentLoaded', () => {
     cargarAvisos();
     cargarCursos();
     cargarEventosCalendario();
+
+    // Función para mostrar detalles del evento en modal
+    window.mostrarDetallesEvento = function(evento) {
+        const modal = document.getElementById('eventoModal');
+        const modalContent = modal.querySelector('.modal-content');
+        
+        // Limpiar clases de evento anteriores
+        modalContent.className = 'modal-content';
+        // Añadir clase específica del tipo de evento
+        modalContent.classList.add('event-modal', `event-${evento.tipo_evento}`);
+        
+        // Actualizar título
+        modal.querySelector('.modal-title').textContent = evento.titulo;
+        
+        // Formatear y actualizar fechas
+        const fechaInicio = new Date(evento.fecha_inicio).toLocaleDateString('es-ES', {
+            weekday: 'long',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+            hour: 'numeric',
+            minute: 'numeric'
+        });
+        
+        const fechaFin = new Date(evento.fecha_fin).toLocaleDateString('es-ES', {
+            weekday: 'long',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+            hour: 'numeric',
+            minute: 'numeric'
+        });
+        
+        const fechaTexto = fechaInicio === fechaFin 
+            ? `Fecha: ${fechaInicio}`
+            : `Desde: ${fechaInicio}\nHasta: ${fechaFin}`;
+        
+        modal.querySelector('.event-date').textContent = fechaTexto;
+        
+        // Actualizar descripción
+        modal.querySelector('.event-description').textContent = evento.descripcion || 'Sin descripción';
+        
+        // Actualizar tipo de evento
+        const tipoEvento = evento.tipo_evento.charAt(0).toUpperCase() + evento.tipo_evento.slice(1);
+        modal.querySelector('.event-type').className = `event-type event-type-${evento.tipo_evento}`;
+        modal.querySelector('.event-type').textContent = tipoEvento;
+    };
 
     // Configurar los filtros
     document.querySelectorAll('.btn-outline-primary').forEach(button => {
