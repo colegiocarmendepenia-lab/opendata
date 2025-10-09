@@ -171,9 +171,11 @@ async function cargarEventosCalendario() {
         // Consultamos los eventos activos
         const { data, error } = await supabase
             .from('calendario_escolar')
-            .select('id, titulo, descripcion, fecha_inicio, fecha_fin, tipo_evento')
+            .select('id, titulo, descripcion, fecha_inicio, fecha_fin, tipo_evento, estado')
             .eq('estado', 'activo')
             .order('fecha_inicio', { ascending: true });
+
+        console.log('Eventos obtenidos:', data); // Para debug
 
         if (error) {
             console.error('Error al consultar eventos:', error);
@@ -273,6 +275,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Función para mostrar detalles del evento en modal
     window.mostrarDetallesEvento = function(evento) {
+        console.log('Mostrando evento:', evento); // Para debug
         const modal = document.getElementById('eventoModal');
         const modalContent = modal.querySelector('.modal-content');
         
