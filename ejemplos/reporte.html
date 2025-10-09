@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Académico</title>
+    <!-- Carga de Chart.js para gráficos dinámicos -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+    
+    <style>
+        /* --- Estilos CSS Profesionales --- */
+        :root {
+            --color-principal: #1a73e8; /* Azul institucional */
+            --color-secundario: #f1f3f4; /* Fondo claro */
+            --color-card: #ffffff;
+            --color-texto: #202124;
+            --color-sombra: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', Arial, sans-serif;
+            background-color: var(--color-secundario);
+            color: var(--color-texto);
+            line-height: 1.5;
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* --- Barra Lateral (Sidebar) --- */
+        .sidebar {
+            width: 250px;
+            background-color: var(--color-card);
+            padding: 20px;
+            box-shadow: 2px 0 5px rgba(0, 0, 0, 0.05);
+            flex-shrink: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .sidebar h2 {
+            font-size: 1.3em;
+            color: var(--color-principal);
+            border-bottom: 2px solid #e0e0e0;
+            padding-bottom: 10px;
+        }
+
+        .filter-group label {
+            display: block;
+            font-size: 0.9em;
+            font-weight: 500;
+            margin-bottom: 5px;
+            color: #5f6368;
+        }
+
+        .filter-group select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            background-color: #fff;
+            font-size: 1em;
+            cursor: pointer;
+        }
+
+        /* --- Contenido Principal (Dashboard) --- */
+        .dashboard-content {
+            flex-grow: 1;
+            padding: 30px;
+        }
+
+        .header-main {
+            margin-bottom: 25px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .header-main h1 {
+            font-size: 2em;
+            font-weight: 600;
+            color: var(--color-texto);
+        }
+
+        /* --- Tarjetas KPI --- */
+        .kpi-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            background-color: var(--color-card);
+            border-radius: 12px;
+            box-shadow: var(--color-sombra);
+            padding: 20px;
+            transition: transform 0.2s;
+        }
+
+        .card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+        }
+
+        .kpi-card h3 {
+            font-size: 1em;
+            color: #5f6368;
+            margin-bottom: 10px;
+        }
+
+        .kpi-value {
+            font-size: 2.5em;
+            font-weight: bold;
+            color: var(--color-principal);
+        }
+
+        .kpi-change {
+            font-size: 0.9em;
+            margin-top: 5px;
+        }
+        
+        .kpi-change.positive { color: #34a853; }
+        .kpi-change.negative { color: #ea4335; }
+        .kpi-change.neutral { color: #fbbc04; }
+
+        /* --- Grilla de Gráficos --- */
+        .charts-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .chart-container {
+            height: 400px;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .chart-container h2 {
+            font-size: 1.2em;
+            color: var(--color-texto);
+            margin-bottom: 15px;
+            border-bottom: 1px solid #f0f0f0;
+            padding-bottom: 5px;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            body {
+                flex-direction: column;
+            }
+            .sidebar {
+                width: 100%;
+                box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+            }
+            .dashboard-content {
+                padding: 15px;
+            }
+            .charts-grid {
+                grid-template-columns: 1fr; /* Una columna en móvil */
+            }
+            .kpi-cards {
+                grid-template-columns: repeat(2, 1fr); /* Dos columnas en móvil */
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <aside class="sidebar">
+        <h2>Filtros de Datos</h2>
+        
+        <div class="filter-group">
+            <label for="filter-anio">Año Lectivo:</label>
+            <select id="filter-anio" onchange="updateDashboard()">
+                <option value="2025">2025</option>
+                <option value="2024">2024</option>
+                <option value="2023">2023</option>
+            </select>
+        </div>
+        
+        <div class="filter-group">
+            <label for="filter-nivel">Nivel Educativo:</label>
+            <select id="filter-nivel" onchange="updateDashboard()">
+                <option value="General">General</option>
+                <option value="Secundaria">Secundaria</option>
+                <option value="Primaria">Primaria</option>
+                <option value="Inicial">Inicial</option>
+            </select>
+        </div>
+
+        <div class="filter-group">
+            <label for="filter-tipo-evento">Tipo de Evento (Nueva Categoría):</label>
+            <select id="filter-tipo-evento">
+                <option value="academico">Académico</option>
+                <option value="extracurricular" selected>Extracurricular</option>
+                <option value="evaluacion">Evaluación</option>
+            </select>
+            <p style="font-size: 0.8em; color: #5f6368; margin-top: 5px;">
+                *La categoría 'extracurricular' está activa.
+            </p>
+        </div>
+    </aside>
+
+    <main class="dashboard-content">
+
+        <header class="header-main">
+            <h1>Panel de Control Principal</h1>
+        </header>
+
+        <!-- Tarjetas KPI ACTUALIZADAS -->
+        <section class="kpi-cards">
+            <div class="card kpi-card">
+                <h3>Total de Alumnos</h3>
+                <p class="kpi-value" id="kpi-alumnos-total">--</p>
+                <p class="kpi-change positive" id="kpi-alumnos-total-change"></p>
+            </div>
+            <div class="card kpi-card">
+                <h3>Plantel de Docentes</h3>
+                <p class="kpi-value" id="kpi-docentes-total">--</p>
+                <p class="kpi-change neutral" id="kpi-docentes-total-change"></p>
+            </div>
+            <div class="card kpi-card">
+                <h3>Promedio General (Escala 10)</h3>
+                <p class="kpi-value" id="kpi-promedio-general">--</p>
+                <p class="kpi-change negative" id="kpi-promedio-general-change"></p>
+            </div>
+            <div class="card kpi-card">
+                <h3>Tasa de Morosidad</h3>
+                <p class="kpi-value" id="kpi-morosidad">--</p>
+                <p class="kpi-change positive" id="kpi-morosidad-change"></p>
+            </div>
+        </section>
+
+        <!-- Gráficos ACTUALIZADOS -->
+        <section class="charts-grid">
+            
+            <div class="chart-container card">
+                <h2>Distribución de Alumnos por Sexo</h2>
+                <canvas id="chartSexo"></canvas>
+            </div>
+
+            <div class="chart-container card">
+                <h2>Promedio de Calificación por Grado</h2>
+                <canvas id="chartPromedioAula"></canvas>
+            </div>
+
+            <div class="chart-container card" style="grid-column: 1 / span 2; height: 350px;">
+                <h2>Asistencia Histórica Mensual (%)</h2>
+                <canvas id="chartAsistencia"></canvas>
+            </div>
+
+        </section>
+
+    </main>
+
+    <script>
+        // --- 1. Definición de Datos Ficticios (Actualizados) ---
+        const FICTITIOUS_DATA = {
+            '2025': {
+                'General': {
+                    alumnos_total: 1580, // KPI 1
+                    docentes_total: 85,    // KPI 2
+                    promedio_general: 8.3, // KPI 3
+                    morosidad: 4.5,        // KPI 4
+                    
+                    // Datos para Gráficos
+                    sexo_distribucion: [790, 790], // Hombres, Mujeres (Chart 1)
+                    promedio_por_aula: [8.9, 8.5, 8.1, 7.8, 8.0, 7.9], // Promedio por Grado (Chart 2)
+                    asistencia_mensual: [97.5, 96.8, 97.2, 97.5, 96.9, 97.8], // Asistencia (Chart 3)
+                    
+                    // Datos adicionales
+                    recaudacion: [150, 160, 175, 180, 185, 190], // No usado directamente en esta versión, pero útil.
+                },
+                'Secundaria': {
+                    alumnos_total: 950, docentes_total: 55, promedio_general: 7.9, morosidad: 6.1,
+                    sexo_distribucion: [480, 470],
+                    promedio_por_aula: [7.8, 8.0, 7.9, 7.5, 8.1, 8.2],
+                    asistencia_mensual: [96.0, 95.5, 96.2, 96.5, 95.9, 97.0],
+                },
+                'Primaria': {
+                    alumnos_total: 500, docentes_total: 25, promedio_general: 9.1, morosidad: 2.5,
+                    sexo_distribucion: [255, 245],
+                    promedio_por_aula: [9.2, 9.0, 9.1, 8.8, 9.3, 9.4],
+                    asistencia_mensual: [98.5, 98.2, 98.6, 98.9, 98.1, 99.0],
+                },
+                'Inicial': {
+                    alumnos_total: 130, docentes_total: 5, promedio_general: 9.5, morosidad: 1.0,
+                    sexo_distribucion: [55, 75],
+                    promedio_por_aula: [9.6, 9.4, 9.5, 9.3, 9.6, 9.7],
+                    asistencia_mensual: [99.5, 99.4, 99.6, 99.7, 99.8, 99.9],
+                }
+            },
+            '2024': { /* Datos de un año anterior para comparación */
+                'General': { 
+                    alumnos_total: 1530, docentes_total: 80, promedio_general: 8.1, morosidad: 5.2,
+                    sexo_distribucion: [765, 765],
+                    promedio_por_aula: [8.0, 8.1, 8.0, 7.7, 7.9, 7.8],
+                    asistencia_mensual: [96.0, 95.5, 96.2, 96.5, 95.9, 97.0],
+                },
+                'Secundaria': { alumnos_total: 920, docentes_total: 52, promedio_general: 7.6, morosidad: 6.5, sexo_distribucion: [460, 460], promedio_por_aula: [7.5, 7.8, 7.7, 7.2, 7.9, 8.0], asistencia_mensual: [95.0, 94.5, 95.2, 95.5, 94.9, 96.0] },
+                'Primaria': { alumnos_total: 480, docentes_total: 23, promedio_general: 8.9, morosidad: 3.0, sexo_distribucion: [240, 240], promedio_por_aula: [9.0, 8.8, 8.9, 8.5, 9.1, 9.2], asistencia_mensual: [97.5, 97.2, 97.6, 97.9, 97.1, 98.0] },
+                'Inicial': { alumnos_total: 130, docentes_total: 5, promedio_general: 9.3, morosidad: 1.2, sexo_distribucion: [65, 65], promedio_por_aula: [9.4, 9.2, 9.3, 9.1, 9.4, 9.5], asistencia_mensual: [98.5, 98.4, 98.6, 98.7, 98.8, 98.9] }
+            }
+        };
+
+        // Variables globales para instancias de Chart.js
+        let chartSexo, chartPromedioAula, chartAsistencia;
+
+        // Etiquetas para los gráficos
+        const GRADOS_LABELS = ['1°', '2°', '3°', '4°', '5°', '6°'];
+        const MESES_LABELS = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun'];
+
+        // --- 2. Inicialización de Gráficos (Ajustada) ---
+        function initializeCharts() {
+            const ctxSexo = document.getElementById('chartSexo').getContext('2d');
+            const ctxPromedioAula = document.getElementById('chartPromedioAula').getContext('2d');
+            const ctxAsistencia = document.getElementById('chartAsistencia').getContext('2d');
+            
+            // Gráfico 1: Distribución por Sexo (Doughnut Chart)
+            chartSexo = new Chart(ctxSexo, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Hombres', 'Mujeres'],
+                    datasets: [{
+                        label: 'Cantidad de Alumnos',
+                        backgroundColor: ['#1a73e8', '#ea4335'], // Azul y Rojo
+                        data: [] // Se llena con updateDashboard
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false, // CLAVE: Desactiva el mantenimiento de relación de aspecto
+                    plugins: {
+                        legend: { position: 'top' },
+                        title: { display: false }
+                    }
+                }
+            });
+
+            // Gráfico 2: Promedio por Aula/Grado (Bar Chart)
+            chartPromedioAula = new Chart(ctxPromedioAula, {
+                type: 'bar',
+                data: {
+                    labels: GRADOS_LABELS,
+                    datasets: [{
+                        label: 'Promedio de Calificación',
+                        backgroundColor: '#34a853', // Verde
+                        borderColor: '#34a853',
+                        borderWidth: 1,
+                        data: [] // Se llena con updateDashboard
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false, // CLAVE: Desactiva el mantenimiento de relación de aspecto
+                    scales: { y: { beginAtZero: true, max: 10 } }
+                }
+            });
+
+            // Gráfico 3: Asistencia Histórica (Line Chart)
+            chartAsistencia = new Chart(ctxAsistencia, {
+                type: 'line',
+                data: {
+                    labels: MESES_LABELS,
+                    datasets: [{
+                        label: 'Asistencia Promedio (%)',
+                        backgroundColor: 'rgba(251, 188, 4, 0.2)', // Amarillo Suave
+                        borderColor: '#fbbc04', // Amarillo Principal
+                        pointBackgroundColor: '#fbbc04',
+                        data: [] // Se llena con updateDashboard
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false, // CLAVE: Desactiva el mantenimiento de relación de aspecto
+                    scales: {
+                        y: {
+                            beginAtZero: false,
+                            min: 90,
+                            max: 100
+                        }
+                    }
+                }
+            });
+        }
+
+        // --- 3. Función Principal de Actualización (Se ejecuta con cada cambio de filtro) ---
+        function updateDashboard() {
+            const anio = document.getElementById('filter-anio').value;
+            const nivel = document.getElementById('filter-nivel').value;
+            
+            const currentData = FICTITIOUS_DATA[anio] ? FICTITIOUS_DATA[anio][nivel] : null;
+            const previousYearData = FICTITIOUS_DATA[parseInt(anio) - 1] ? FICTITIOUS_DATA[parseInt(anio) - 1][nivel] : currentData;
+
+            if (!currentData) {
+                console.error('Datos no encontrados para la selección.');
+                return;
+            }
+
+            // A. Actualizar Tarjetas KPI (Usando las nuevas IDs)
+            updateKPI('alumnos-total', currentData.alumnos_total, previousYearData.alumnos_total, 0, 'Alumnos');
+            updateKPI('docentes-total', currentData.docentes_total, previousYearData.docentes_total, 0, 'Docentes');
+            updateKPI('promedio-general', currentData.promedio_general, previousYearData.promedio_general, 1, 'Promedio');
+            // Tasa de Morosidad (por lo general, el valor "peor" es mayor, por eso la lógica de color es invertida)
+            updateKPI('morosidad', currentData.morosidad, previousYearData.morosidad, 1, 'Tasa', '%', true); 
+
+            // B. Actualizar Gráficos
+            
+            // Gráfico 1: Distribución por Sexo
+            chartSexo.data.datasets[0].data = currentData.sexo_distribucion;
+            chartSexo.update();
+            
+            // Gráfico 2: Promedio por Aula/Grado
+            chartPromedioAula.data.datasets[0].data = currentData.promedio_por_aula;
+            chartPromedioAula.update();
+
+            // Gráfico 3: Asistencia
+            chartAsistencia.data.datasets[0].data = currentData.asistencia_mensual;
+            chartAsistencia.update();
+        }
+
+        // Función auxiliar para actualizar una tarjeta KPI (Modificada para Tasa de Morosidad)
+        function updateKPI(id, currentValue, previousValue, decimales, label, suffix = '', isNegativeMetric = false) {
+            const valueElement = document.getElementById(`kpi-${id}`);
+            const changeElement = document.getElementById(`kpi-${id}-change`);
+            
+            const currentFormatted = currentValue.toFixed(decimales) + suffix;
+            valueElement.textContent = currentFormatted;
+
+            const change = currentValue - previousValue;
+            let changeText;
+            let changeClass;
+
+            const isPositiveChange = change > 0;
+            
+            // Lógica para determinar la clase de color
+            if (change === 0) {
+                changeClass = 'neutral';
+            } else if (isNegativeMetric) {
+                // Para Morosidad: un aumento (positivo) es malo (negative class), una disminución es buena (positive class)
+                changeClass = isPositiveChange ? 'negative' : 'positive';
+            } else {
+                // Para el resto: un aumento (positivo) es bueno (positive class)
+                changeClass = isPositiveChange ? 'positive' : 'negative';
+            }
+            
+            // Determinar texto
+            const symbol = isPositiveChange ? '⬆️' : (change < 0 ? '⬇️' : '↔️');
+            changeText = `${symbol} ${Math.abs(change).toFixed(decimales)}${suffix} vs Año Anterior`;
+
+
+            changeElement.textContent = changeText;
+            changeElement.className = `kpi-change ${changeClass}`;
+        }
+
+        // --- 4. Ejecución Inicial ---
+        window.onload = function() {
+            initializeCharts();
+            // Carga inicial con los valores predeterminados de los filtros
+            updateDashboard(); 
+        };
+    </script>
+
+</body>
+</html>

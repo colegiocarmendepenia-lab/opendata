@@ -1,0 +1,121 @@
+<!-- Sección de Calificaciones -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Gestión de Calificaciones</h5>
+                <button type="button" class="btn btn-light" data-bs-toggle="modal" data-bs-target="#modalCalificacion">
+                    <i class="bi bi-plus-circle"></i> Nueva Calificación
+                </button>
+            </div>
+            <div class="card-body">
+                <!-- Alertas -->
+                <div id="alerta-error" class="alert alert-danger d-none" role="alert"></div>
+                <div id="alerta-exito" class="alert alert-success d-none" role="alert"></div>
+
+                <!-- Formulario de filtros -->
+                <div class="row mb-4">
+                    <div class="col-md-3">
+                        <div class="mb-3">
+                            <label for="estudiante-select" class="form-label">Estudiante</label>
+                            <select class="form-select" id="estudiante-select">
+                                <option value="">Todos los estudiantes</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="mb-3">
+                            <label for="periodo-select" class="form-label">Período</label>
+                            <select class="form-select" id="periodo-select">
+                                <option value="">Todos los períodos</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="mb-3">
+                            <label for="materia-select" class="form-label">Materia</label>
+                            <select class="form-select" id="materia-select">
+                                <option value="">Todas las materias</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="mb-3">
+                            <label for="nota-input" class="form-label">Nota Mínima</label>
+                            <input type="number" class="form-control" id="nota-input" min="0" max="100" step="1">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tabla de calificaciones -->
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover" id="tabla-calificaciones">
+                        <thead>
+                            <tr>
+                                <th>Estudiante</th>
+                                <th>Período</th>
+                                <th>Materia</th>
+                                <th>Nota</th>
+                                <th>Fecha</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="calificaciones-tabla-body">
+                            <tr>
+                                <td colspan="6" class="text-center">
+                                    <div class="spinner-border text-primary" role="status">
+                                        <span class="visually-hidden">Cargando...</span>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para agregar/editar calificación -->
+<div class="modal fade" id="modalCalificacion" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="form-title">Nueva Calificación</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="form-calificacion">
+                    <input type="hidden" id="calificacion-id">
+                    <div class="mb-3">
+                        <label for="estudiante-select-modal" class="form-label">Estudiante</label>
+                        <select class="form-select" id="estudiante-select-modal" required>
+                            <option value="">Seleccione un estudiante</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="periodo-select-modal" class="form-label">Período</label>
+                        <select class="form-select" id="periodo-select-modal" required>
+                            <option value="">Seleccione un período</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="materia-select-modal" class="form-label">Materia</label>
+                        <select class="form-select" id="materia-select-modal" required>
+                            <option value="">Seleccione una materia</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="nota-input-modal" class="form-label">Nota</label>
+                        <input type="number" class="form-control" id="nota-input-modal" min="0" max="100" step="1" required>
+                        <div class="form-text">La nota debe estar entre 0 y 100</div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="submit" class="btn btn-primary" id="btn-submit">Guardar Calificación</button>
+            </div>
+        </div>
+    </div>
+</div>
