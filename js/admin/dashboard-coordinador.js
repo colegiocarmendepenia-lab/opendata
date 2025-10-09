@@ -37,7 +37,7 @@ const TABLAS = {
 
 // Configuración
 const CONFIG = {
-    permisosEdicion: ['calendario', 'avisos', 'horarios', 'calificaciones', 'asistencias'],
+    permisosEdicion: ['calendario', 'avisos', 'horarios', 'calificaciones', 'asistencias', 'imagenes'],
     permisosSoloLectura: [],
     tiposPublicacion: ['aviso', 'noticia', 'circular'],
     estadosAsistencia: ['presente', 'ausente', 'justificado', 'atraso'],
@@ -117,6 +117,9 @@ async function cargarSeccion(seccion) {
         switch (seccion) {
             case 'calendario':
                 await cargarEventosCalendario(mainContent);
+                break;
+            case 'imagenes':
+                await inicializarModuloImagenes(mainContent);
                 break;
             case 'avisos':
                 await cargarAvisos(mainContent, puedeEditar);
