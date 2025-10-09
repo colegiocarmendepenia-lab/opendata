@@ -176,6 +176,11 @@
     color: white !important;
 }
 
+.bg-teal {
+    background-color: #20c997 !important;
+    color: white !important;
+}
+
 /* Asegurar que el modal esté por encima de otros elementos */
 .modal {
     z-index: 1060 !important;

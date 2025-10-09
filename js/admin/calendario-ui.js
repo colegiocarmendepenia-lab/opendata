@@ -61,6 +61,7 @@ export async function cargarEventosCalendario(container) {
                                         <option value="feriado">Feriado</option>
                                         <option value="academico">Académico</option>
                                         <option value="conmemorativo">Conmemorativo</option>
+                                        <option value="extracurricular">Extracurricular</option>
                                     </select>
                                 </div>
                                 <div class="mb-3">
@@ -310,6 +311,8 @@ function obtenerClaseEvento(tipo) {
             return 'bg-purple';
         case 'conmemorativo':
             return 'bg-orange';
+        case 'extracurricular':
+            return 'bg-teal';
         default:
             return 'bg-secondary';
     }

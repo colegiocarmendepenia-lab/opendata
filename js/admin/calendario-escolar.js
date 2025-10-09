@@ -119,7 +119,7 @@ export function validarEvento(evento) {
 
     if (!evento.tipo_evento) {
         errores.push('El tipo de evento es requerido');
-    } else if (!['clase', 'evaluacion', 'reunion', 'actividad', 'feriado'].includes(evento.tipo_evento)) {
+    } else if (!['clase', 'evaluacion', 'reunion', 'actividad', 'feriado', 'academico', 'conmemorativo', 'extracurricular'].includes(evento.tipo_evento)) {
         errores.push('El tipo de evento no es válido');
     }
 
