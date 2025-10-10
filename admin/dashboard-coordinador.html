@@ -361,24 +361,38 @@
                 <div class="modal-body">
                     <form id="formAsistencia">
                         <div class="row mb-3">
-                            <div class="col-md-6">
-                                <label for="cursoAsistencia" class="form-label">Curso</label>
-                                <select class="form-select" id="cursoAsistencia" required>
-                                    <option value="">Seleccione curso...</option>
+                            <div class="col-md-4">
+                                <label for="gradoAsistencia" class="form-label">Grado</label>
+                                <select class="form-select" id="gradoAsistencia" required>
+                                    <option value="">Seleccione grado...</option>
                                 </select>
                             </div>
-                            <div class="col-md-6">
+                            <div class="col-md-4">
+                                <label for="seccionAsistencia" class="form-label">Sección</label>
+                                <select class="form-select" id="seccionAsistencia" required>
+                                    <option value="">Seleccione sección...</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
                                 <label for="fechaAsistencia" class="form-label">Fecha</label>
                                 <input type="date" class="form-control" id="fechaAsistencia" required>
                             </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="materiaAsistencia" class="form-label">Materia</label>
+                            <select class="form-select" id="materiaAsistencia" required>
+                                <option value="">Seleccione materia...</option>
+                            </select>
                         </div>
                         <div class="table-responsive">
                             <table class="table table-hover" id="tablaAsistencia">
                                 <thead>
                                     <tr>
-                                        <th>Alumno</th>
+                                        <th>Código</th>
+                                        <th>Estudiante</th>
                                         <th>Estado</th>
-                                        <th>Observación</th>
+                                        <th>Fecha Registro</th>
+                                        <th>Acciones</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -390,11 +404,39 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-success" id="btnExportarAsistencia">
+                        <i class="bi bi-file-earmark-excel"></i> Exportar
+                    </button>
                     <button type="button" class="btn btn-primary" id="btnGuardarAsistencia">Guardar</button>
                 </div>
             </div>
         </div>
     </div>
+
+    <!-- Template para fila de asistencia -->
+    <template id="templateFilaAsistencia">
+        <tr>
+            <td class="codigo-estudiante"></td>
+            <td class="nombre-estudiante"></td>
+            <td>
+                <select class="form-select estado-asistencia">
+                    <option value="Presente">Presente</option>
+                    <option value="Ausente">Ausente</option>
+                    <option value="Tardanza">Tardanza</option>
+                    <option value="Justificado">Justificado</option>
+                </select>
+            </td>
+            <td class="fecha-registro"></td>
+            <td>
+                <button type="button" class="btn btn-sm btn-outline-primary btn-editar-asistencia">
+                    <i class="bi bi-pencil"></i>
+                </button>
+                <button type="button" class="btn btn-sm btn-outline-danger btn-eliminar-asistencia">
+                    <i class="bi bi-trash"></i>
+                </button>
+            </td>
+        </tr>
+    </template>
 
     <!-- Modal de Gestión de Imágenes -->
     <div class="modal fade" id="modalImagen" tabindex="-1">
