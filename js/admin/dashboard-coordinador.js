@@ -1,11 +1,25 @@
 // Dashboard Coordinador
 import { cargarEventosCalendario } from './calendario-ui.js';
-import { cargarPublicacionesUI } from './publicaciones-ui.js';
+import { cargarPublicacionesUI } fro            case 'imagenes':
+                await inicializarModuloImagenes(mainContent);
+                break;
+            case 'avisos':
+                await cargarAvisos(mainContent, puedeEditar);
+                break;
+            case 'horarios':
+                await cargarHorariosUI(mainContent, puedeEditar);
+                break;ciones-ui.js';
 import { cargarHorariosUI } from './horarios-ui.js';
 import { inicializarModuloImagenes } from './imagenes.js';
 import { cargarCalificaciones } from './modules/calificaciones.js';
+import { mostrarError, mostrarExito, formatearEstadoAsistencia, formatearFecha } from './utils.js';
 
-const VERSION = '1.0.20';
+const VERSION = '1.0.32';
+
+// Importar librerías
+import 'https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js';
+import 'https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js';
+import 'https://cdn.jsdelivr.net/npm/chart.js';
 
 // Importar cliente Supabase
 import { supabase } from './supabase.js';
@@ -201,21 +215,39 @@ async function cargarAsistencias(container, puedeEditar) {
         `;
 
         // Obtener datos
-        const { data: asistencias } = await supabase
+        const { data: asistencias, error: errorAsistencias } = await supabase
             .from('asistencias')
             .select(`
-                *,
-                alumno:alumno_id(nombre, apellido)
+                id,
+                fecha,
+                estado,
+                materia,
+                created_at,
+                estudiante:estudiante_id(
+                    codigo_estudiante,
+                    grado,
+                    seccion,
+                    persona:persona_id(
+                        nombre,
+                        apellido
+                    )
+                )
             `)
             .order('fecha', { ascending: false });
+
+        if (errorAsistencias) throw errorAsistencias;
+        if (!asistencias) throw new Error('No se pudieron obtener las asistencias');
 
         // Configurar DataTable
         const tabla = new DataTable('#tablaAsistencias', {
             data: asistencias.map(a => ({
-                fecha: a.fecha,
-                alumno: `${a.alumno.nombre} ${a.alumno.apellido}`,
+                fecha: formatearFecha(a.fecha, false),
+                alumno: `${a.estudiante.persona.nombre} ${a.estudiante.persona.apellido}`,
+                codigo: a.estudiante.codigo_estudiante,
+                grado: `${a.estudiante.grado} - ${a.estudiante.seccion}`,
+                materia: a.materia,
                 estado: formatearEstadoAsistencia(a.estado),
-                observacion: a.observacion || '',
+                fecha_registro: formatearFecha(a.created_at),
                 acciones: `
                     <button class="btn btn-sm btn-outline-primary btn-editar" data-id="${a.id}">
                         <i class="bi bi-pencil"></i>
@@ -226,11 +258,14 @@ async function cargarAsistencias(container, puedeEditar) {
                 `
             })),
             columns: [
-                { data: 'fecha' },
-                { data: 'alumno' },
-                { data: 'estado' },
-                { data: 'observacion' },
-                { data: 'acciones' }
+                { data: 'fecha', title: 'Fecha' },
+                { data: 'codigo', title: 'Código' },
+                { data: 'alumno', title: 'Estudiante' },
+                { data: 'grado', title: 'Grado' },
+                { data: 'materia', title: 'Materia' },
+                { data: 'estado', title: 'Estado' },
+                { data: 'fecha_registro', title: 'Registrado' },
+                { data: 'acciones', title: 'Acciones' }
             ],
             language: {
                 url: 'https://cdn.datatables.net/plug-ins/1.10.25/i18n/Spanish.json'
